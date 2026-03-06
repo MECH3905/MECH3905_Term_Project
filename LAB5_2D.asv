@@ -1,4 +1,4 @@
-%% ============================================================
+ %% ============================================================
 %  MECH3905 LAB 5
 %  Force Controlled Mass with Quadratic Drag
 %  RK4 Integration
@@ -129,41 +129,42 @@ clear arduinoObj
 % ============================================================
  
 function y_new = RK4(y, dt)
-    w1=1/6; w2=1/3; w3=1/3; w4=1/6; c2=1/2; c3=1/2; c4=1;
+    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
     k1=dt*f(y);
     k2=dt*f(y+a21*k1);
     k3=dt*f(y+a31*k1+a32*k2);
-    k4=dt*f(y+a41*k1+a42*k2+a43*k3)
+    k4=dt*f(y+a41*k1+a42*k2+a43*k3);
 
-    y_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
+    y_new=y+w1*k1+w2*k2+w3*k3+w4*k4;
 end
 
 
 
-function x_new = RK4x(x, h)
-    w1=1/6; w2=1/3; w3=1/3; w4=1/6; c2=1/2; c3=1/2; c4=1;
+function x_new = RK4x(x, dt)
+    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1 = h*fx(x);
-    k2 = h*fx(x + 0.5*k1);
-    k3 = h*fx(x + 0.5*k2);
-    k4 = h*fx(x + k3);
-    x_new = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+    k1=dt*fx(x);
+    k2=dt*fx(x+a21*k1);
+    k3=dt*fx(x+a31*k1+a32*k2);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3);
+
+    x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
  
 %% ============================================================
 % DYNAMICS FUNCTION
 % ============================================================
  
-function dxdt = f(x)
+function dxdt = f(y)
  
     global m rho Cd A uy F_drag
  
     dxdt = zeros(2,1);
  
-    v = x(2);
+    v = y(2);
  
     % Quadratic drag
     F_drag = 0.5 * rho * Cd * A * v * abs(v);
@@ -178,12 +179,12 @@ function dxdtx = fx(x)
  
     dxdtx = zeros(2,1);
  
-    v = x(2);
+    vx = x(2);
  
     % Quadratic drag
-    F_dragx = 0.5 * rho * Cd * A * v * abs(v);
+    F_dragx = 0.5 * rho * Cd * A * vx * abs(vx);
  
-    dxdtx(1) = v;
+    dxdtx(1) = vx;
     dxdtx(2) = (ux - F_dragx) / m;
 end
 %% ============================================================
@@ -194,7 +195,7 @@ function [e, ball_image, alpha] = figure_setup()
 
 global yl xl
  
-    e = figure('position',[500 500 500 500]);
+    e = figure('position',[200 200 500 500]);
     hold on
     axis equal
  
