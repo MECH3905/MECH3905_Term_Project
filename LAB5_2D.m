@@ -1,11 +1,9 @@
- %% ============================================================
 %  MECH3905 LAB 5
 %  Force Controlled Mass with Quadratic Drag
 %  RK4 Integration
 %  Live Force + Drag + Velocity Display
-% ============================================================
  
-clear
+clear all
 close all
 clc
  
@@ -25,7 +23,6 @@ F_dragx = 0;
 xl = 150;
 yl = 150;
 
- 
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
 pause(2)
@@ -50,7 +47,6 @@ forceText = text(-80,80,'Force: 0 N','FontSize',12,'Color','k');
 dragText  = text(-80,70,'Drag: 0 N','FontSize',12,'Color','k');
 velText   = text(-80,60,'Velocity: 0','FontSize',12,'Color','k');
 
- 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(H)
  
@@ -64,8 +60,6 @@ while ishandle(H)
             num = str2double(tmp);
             numx = str2double(tmp);
  
-           
- 
                 raw = num(2);
  
                 % Deadband
@@ -74,10 +68,7 @@ while ishandle(H)
                 else
                     uy = (raw - 512);
                 end
- 
-          
            
- 
                 rawx = num(3);
  
                 % Deadband
@@ -89,8 +80,6 @@ while ishandle(H)
  
     end
         
-    
- 
     % ----- RK4 Integration -----
     y = RK4(y, dt);
     x = RK4x(x, dt);
@@ -139,8 +128,6 @@ function y_new = RK4(y, dt)
 
     y_new=y+w1*k1+w2*k2+w3*k3+w4*k4;
 end
-
-
 
 function x_new = RK4x(x, dt)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
@@ -204,9 +191,6 @@ global yl xl
     set(gcf,'Toolbar','none','Menu','none');
     set(gca,'visible','off');
     set(gcf,'color','w');
-    
- 
-  
 
     ylim([-yl yl])
     xlim([-xl xl])
