@@ -1,8 +1,12 @@
 clear all
 close all
 clc
+<<<<<<< HEAD
  %does this work 
  
+=======
+
+>>>>>>> c74ab52fa565e4491ff9655d95fca9dd348c36be
 % Declare global variables 
 global m rho Cd A uy ux  F_drag F_dragx xl yl g
  
