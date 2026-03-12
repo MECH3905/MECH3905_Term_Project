@@ -118,7 +118,7 @@ while ishandle(H)
                     health = health - (0.025 + (abs(ux) + abs(uy))*0.0001)*crouch;
                 end
 
-                h = 1.0+(101.0-health)*0.05;
+                h = 1.0+(100.0-health)*0.05;
     end
         
     if raw <10
