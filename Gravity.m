@@ -8,6 +8,7 @@
 clear
 close all
 clc
+
  
 %% ---------------- GLOBAL VARIABLES ----------------
 global m rho Cd A uy ux  F_drag F_dragx xl yl g
