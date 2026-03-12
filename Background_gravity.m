@@ -52,11 +52,12 @@ set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     xlim([0 1])
  
     [ball,~,alpha] = imread('circle_black_transparent.png');
-    
-   
     ball = flipud(ball);
     alpha = flipud(alpha);
     
+    [marshmellow,~,alpham] = imread('marshmallow.png');
+     marshmellow = flipud(marshmellow);
+    alpham = flipud(alpham);
 scale = 0.04;
 
 %[b_img, a_img, ~] = size(ball);
@@ -68,7 +69,7 @@ dt = 0.02;
 screenx = 0.25;
 screeny = 0.5;
 
-H = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpha);
+H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
 Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
 K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
 W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
@@ -117,7 +118,7 @@ while ishandle(H)
                       
                    end  
                 else
-                    uy = 0;  % Reset applied force if within deadband
+                    uy = -1000;  % Reset applied force if within deadband
                     j =0;
                 end
 
