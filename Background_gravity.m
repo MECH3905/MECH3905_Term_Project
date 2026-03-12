@@ -134,12 +134,12 @@ while ishandle(H)
     x = RK4x(x, dt, h);
 
     % ----- Boundary Limits -----
-    if y(1) > 0
+    if y(1) > 1
 
-        y(1) = 0;
+        y(1) = 1;
         y(2) = 0;
     elseif y(1) < 0
-        y(1) = 0.25;
+        y(1) = 0;
         y(2) = 0;
     end
    
