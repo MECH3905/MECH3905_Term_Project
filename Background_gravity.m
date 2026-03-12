@@ -1,7 +1,7 @@
 clear all
 close all
 clc
-
+ %does this work 
  
 % Declare global variables 
 global m rho Cd A uy ux  F_drag F_dragx xl yl g
@@ -28,20 +28,42 @@ configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
  
 %% ---------------- FIGURE SETUP ----------------
-[e, ball, alpha] = figure_setup(); 
+%[bg, ball, alpha] = figure_setup(); 
+figure('WindowState','maximized','Toolbar','none','MenuBar','none','Color','w')
+ax = gca;
+ax.Position = [0 0 1 1];
+axis off; hold on
+
+% Background
+bg = imread('background.jpg'); bg = flipud(bg);
+image('CData',bg,'XData',[0 1],'YData',[0 1])
+set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
+    
+ 
+  
+
+    %ylim([0 0])
+   % xlim([0 0])
+ 
+    [ball_image,~,alpha] = imread('circle_black_transparent.png');
+    
+   
+    ball_image = flipud(ball_image);
+    alpha = flipud(alpha);
+    
 scale = 0.007;
 
-[b_img, a_img, ~] = size(ball);
+%[b_img, a_img, ~] = size(ball);
  
 % State vector: x = [position; velocity]
 x = [0;0];
 y = [0;0];
 dt = 0.02;
  
-H = image(ball,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2], 'YData',[y(1)-scale*b_img/2+10 y(1)+scale*b_img/2+10], 'AlphaData',alpha);
-Q = image(ball,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2], 'YData',[y(1)-scale*b_img/2+15 y(1)+scale*b_img/2+15], 'AlphaData',alpha); 
-K = image(ball,'XData',[x(1)-scale*a_img/2+7 x(1)+scale*a_img/2+7], 'YData',[y(1)-scale*b_img/2+12 y(1)+scale*b_img/2+12], 'AlphaData',alpha); 
-W = image(ball,'XData',[x(1)-scale*a_img/2+5 x(1)+scale*a_img/2+5], 'YData',[y(1)-scale*b_img/2+12 y(1)+scale*b_img/2+12], 'AlphaData',alpha); 
+H = image(ball,'XData',[x(1)-scale x(1)+scale], 'YData',[y(1)-scale*+10 y(1)+scale+10], 'AlphaData',alpha);
+Q = image(ball,'XData',[x(1)-scale x(1)+scale], 'YData',[y(1)-scale+15 y(1)+scale+15], 'AlphaData',alpha); 
+K = image(ball,'XData',[x(1)-scale+7 x(1)+scale+7], 'YData',[y(1)-scale+12 y(1)+scale+12], 'AlphaData',alpha); 
+W = image(ball,'XData',[x(1)-scale+5 x(1)+scale+5], 'YData',[y(1)-scale+12 y(1)+scale+12], 'AlphaData',alpha); 
 % ----- Debug Text -----
 forceText = text(-80,80,'Force: 0 N','FontSize',12,'Color','k');
 dragText  = text(-80,70,'Drag: 0 N','FontSize',12,'Color','k');
@@ -257,20 +279,20 @@ end
 % FIGURE SETUP FUNCTION
 % ============================================================
  
-function [bg, ball_image, alpha] = figure_setup()
+%function [bg, ball_image, alpha] = figure_setup()
 
 
  
     % Create fullscreen figure
-figure('WindowState','maximized','Toolbar','none','MenuBar','none','Color','w')
-ax = gca;
-ax.Position = [0 0 1 1];
-axis off; hold on
+%figure('WindowState','maximized','Toolbar','none','MenuBar','none','Color','w')
+%ax = gca;
+%ax.Position = [0 0 1 1];
+%axis off; hold on
 
 % Background
-bg = imread('background.jpg'); bg = flipud(bg);
-image('CData',bg,'XData',[0 1],'YData',[0 1])
-set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
+%bg = imread('background.jpg'); bg = flipud(bg);
+%image('CData',bg,'XData',[0 1],'YData',[0 1])
+%set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     
  
   
@@ -278,11 +300,11 @@ set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     %ylim([0 0])
    % xlim([0 0])
  
-    [ball_image,~,alpha] = imread('circle_black_transparent.png');
+  %  [ball_image,~,alpha] = imread('circle_black_transparent.png');
     
    
-    ball_image = flipud(ball_image);
-    alpha = flipud(alpha);
+  %  ball_image = flipud(ball_image);
+  %  alpha = flipud(alpha);
     
   
-end
+%end
