@@ -1,19 +1,19 @@
-clear
+clear all
 close all
 clc
 
  
-%% ---------------- GLOBAL VARIABLES ----------------
+% Declare global variables 
 global m rho Cd A uy ux  F_drag F_dragx xl yl g
  
-% ----- Physical Constants -----
-m   = 10;        % mass (kg)
-rho = 1.2;       % air density (kg/m^3)
-Cd  = 10;       % drag coefficient
-A   = 10;      % cross-sectional area (m^2)
-g = 9.81; %gravitational acceleration (m/s^2)
+% Declare physical constants 
+m   = 10; % mass (kg)
+rho = 1.2; % air density (kg/m^3)
+Cd  = 10; % drag coefficient
+A   = 10; % cross-sectional area (m^2)
+g = 9.81; % gravitational acceleration (m/s^2)
  
-uy = 0;           % applied force
+uy = 0; % applied force
 ux = 0;
 F_drag = 0;      % drag force
 F_dragx = 0;
@@ -28,7 +28,7 @@ configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
  
 %% ---------------- FIGURE SETUP ----------------
-[e, ball, alpha] = figure_setup();
+[e, ball, alpha] = figure_setup(); 
 scale = 0.007;
 
 [b_img, a_img, ~] = size(ball);
