@@ -157,13 +157,13 @@ while ishandle(H)
         x(2) = 0;
     end
 
-     if c == 0
+     if c == 1
 
         T = 0.2;
         s = 2;
     else 
         T = 0;
-        s=1;
+        
 
     end
  
@@ -171,7 +171,7 @@ while ishandle(H)
     set(H,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2],'YData',[y(1)-scale*b_img/2+10 y(1)+scale*b_img/2+10]);
     set(Q,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2],'YData',[y(1)-scale*b_img/2+15+5*c y(1)+scale*b_img/2+15+5*c]);
     set(K,'XData',[x(1)-scale*a_img/2+7+5*b x(1)+scale*a_img/2+7+5*b], 'YData',[y(1)-scale*b_img/2+12 y(1)+scale*b_img/2+12], 'AlphaData',alpha); 
-    set(W,'XData',[x(1)-scale*a_img*s/2+5 x(1)+scale*a_img*s/2+5], 'YData',[y(1)-scale*b_img*s/2+12 y(1)+scale*b_img*s/2+12], 'AlphaData',T); 
+    set(W,'XData',[x(1)-scale*a_img/2+5 x(1)+scale*a_img/2+5], 'YData',[y(1)-scale*b_img/2+12 y(1)+scale*b_img/2+12], 'AlphaData',T); 
 % ----- Debug Text -----
     % ----- Update Debug Text -----
     set(forceText,'String',sprintf('Force: %.2f N',abs(uy)+abs(ux)));
@@ -283,7 +283,7 @@ global yl xl
     ylim([-yl yl])
     xlim([-xl xl])
  
-    [ball_image,~,alpha] = imread('circle_black_transparent.png');
+    [ball_image,alpha_channel,alpha] = imread('circle_black_transparent.png');
     
    
     ball_image = flipud(ball_image);
