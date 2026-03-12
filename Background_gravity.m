@@ -1,12 +1,12 @@
 clear all
 close all
 clc
-<<<<<<< HEAD
+%<<<<<<< HEAD
  %does this work 
  
-=======
 
->>>>>>> c74ab52fa565e4491ff9655d95fca9dd348c36be
+
+
 % Declare global variables 
 global m rho Cd A uy ux  F_drag F_dragx xl yl g
  
@@ -21,8 +21,8 @@ uy = 0; % applied force
 ux = 0;
 F_drag = 0;      % drag force
 F_dragx = 0;
-xl = 150;
-yl = 100;
+xl = 125;
+yl = 75;
 
  
 %% ---------------- SERIAL SETUP ----------------
@@ -33,29 +33,31 @@ flush(arduinoObj);
  
 %% ---------------- FIGURE SETUP ----------------
 %[bg, ball, alpha] = figure_setup(); 
-figure('WindowState','maximized','Toolbar','none','MenuBar','none','Color','w')
+figure('position',[400 100 700 700])
 ax = gca;
 ax.Position = [0 0 1 1];
 axis off; hold on
-
+set(gcf,'Toolbar','none','Menu','none');
+set(gca,'visible','off');
+set(gcf,'color','w');
 % Background
-bg = imread('background.jpg'); bg = flipud(bg);
+bg = imread('backgroundSquare.jpg'); bg = flipud(bg);
 image('CData',bg,'XData',[0 1],'YData',[0 1])
 set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     
  
   
 
-    %ylim([0 0])
-   % xlim([0 0])
+    ylim([0 1])
+    xlim([0 1])
  
-    [ball_image,~,alpha] = imread('circle_black_transparent.png');
+    [ball,~,alpha] = imread('circle_black_transparent.png');
     
    
-    ball_image = flipud(ball_image);
+    ball = flipud(ball);
     alpha = flipud(alpha);
     
-scale = 0.007;
+scale = 0.04;
 
 %[b_img, a_img, ~] = size(ball);
  
@@ -63,17 +65,18 @@ scale = 0.007;
 x = [0;0];
 y = [0;0];
 dt = 0.02;
- 
-H = image(ball,'XData',[x(1)-scale x(1)+scale], 'YData',[y(1)-scale*+10 y(1)+scale+10], 'AlphaData',alpha);
-Q = image(ball,'XData',[x(1)-scale x(1)+scale], 'YData',[y(1)-scale+15 y(1)+scale+15], 'AlphaData',alpha); 
-K = image(ball,'XData',[x(1)-scale+7 x(1)+scale+7], 'YData',[y(1)-scale+12 y(1)+scale+12], 'AlphaData',alpha); 
-W = image(ball,'XData',[x(1)-scale+5 x(1)+scale+5], 'YData',[y(1)-scale+12 y(1)+scale+12], 'AlphaData',alpha); 
-% ----- Debug Text -----
-forceText = text(-80,80,'Force: 0 N','FontSize',12,'Color','k');
-dragText  = text(-80,70,'Drag: 0 N','FontSize',12,'Color','k');
-velText   = text(-80,60,'Velocity: 0','FontSize',12,'Color','k');
-healthText   = text(-80,50,'Health: 0','FontSize',12,'Color','k');
+screenx = 0.25;
+screeny = 0.5;
 
+H = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpha);
+Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
+K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
+W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
+% ----- Debug Text -----
+forceText = text(0.1,0.9,'Force: 0 N','FontSize',12,'Color','w');
+dragText  = text(0.1,0.85,'Drag: 0 N','FontSize',12,'Color','w');
+velText   = text(0.1,0.8,'Velocity: 0','FontSize',12,'Color','w');
+healthText   = text(0.1,0.75,'Health: 0','FontSize',12,'Color','w');
 
 health = 100;
 T = 100;
@@ -92,9 +95,17 @@ while ishandle(H)
             num = str2double(tmp);
 
                 raw = num(2);
- 
+                btn2 = num(5);
                 % Deadband
                 if (raw - 512) > 300
+                        
+                  
+                    up = 1;
+                else 
+                    up = 0;
+                end  
+
+                if btn2 == 0
                         
                   
                     uy = 1000;
@@ -105,7 +116,6 @@ while ishandle(H)
                       uy = -100;
                       
                    end  
-
                 else
                     uy = 0;  % Reset applied force if within deadband
                     j =0;
@@ -153,6 +163,14 @@ while ishandle(H)
         b = 0;
     else 
         b = 1;
+    end   
+
+    if ux < -10
+
+        back = -1;
+    else 
+        back = 1;
+
     end    
 
     % ----- RK4 Integration -----
@@ -160,12 +178,12 @@ while ishandle(H)
     x = RK4x(x, dt, h);
 
     % ----- Boundary Limits -----
-    if y(1) > 1
+    if y(1) > 0
 
-        y(1) = 1;
-        y(2) = 0;
-    elseif y(1) < 0
         y(1) = 0;
+        y(2) = 0;
+    elseif y(1) < -yl
+        y(1) = -yl;
         y(2) = 0;
     end
    
@@ -173,7 +191,7 @@ while ishandle(H)
         x(1) = xl;
         x(2) = 0;
     elseif x(1) < -xl
-        x(1) = -xl;
+        x(1) = - xl;
         x(2) = 0;
     end
 
@@ -187,11 +205,13 @@ while ishandle(H)
 
     end
  
+    x1 = (x(1)+xl)/(2*xl);
+    y1 = (y(1)+yl)/(2*yl);
     % ----- Update Ball -----
-    set(H,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2],'YData',[y(1)-scale*b_img/2+10 y(1)+scale*b_img/2+10]);
-    set(Q,'XData',[x(1)-scale*a_img/2 x(1)+scale*a_img/2],'YData',[y(1)-scale*b_img/2+15+5*c y(1)+scale*b_img/2+15+5*c]);
-    set(K,'XData',[x(1)-scale*a_img/2+7+5*b x(1)+scale*a_img/2+7+5*b], 'YData',[y(1)-scale*b_img/2+12 y(1)+scale*b_img/2+12], 'AlphaData',alpha); 
-    set(W,'XData',[x(1)-scale*a_img*s/2+5 x(1)+scale*a_img*s/2+5], 'YData',[y(1)-scale*b_img*s/2+12 y(1)+scale*b_img*s/2+12], 'AlphaData',T); 
+    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/yl y1+scale+10/yl]);
+    set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/yl+5*c/yl y1+scale+15/yl+5*c/yl]);
+    set(K,'XData',[x1-scale+7*back/xl+5*b*back/xl x1+scale+7*back/xl+5*back*b/xl], 'YData',[y1-scale+(12+7*up*b)/yl y1+scale+(12+7*up*b)/yl], 'AlphaData',alpha); 
+    set(W,'XData',[x1-scale*s+4/xl x1+scale*s+4/xl], 'YData',[y1-scale*s+12/yl y1+scale*s+12/yl], 'AlphaData',T); 
 % ----- Debug Text -----
     % ----- Update Debug Text -----
     set(forceText,'String',sprintf('Force: %.2f N',abs(uy)+abs(ux)));
