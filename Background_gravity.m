@@ -83,7 +83,7 @@ forceText = text(0.1,0.9,'Force: 0 N','FontSize',12,'Color','w');
 dragText  = text(0.1,0.85,'Drag: 0 N','FontSize',12,'Color','w');
 velText   = text(0.1,0.8,'Velocity: 0','FontSize',12,'Color','w');
 healthText   = text(0.1,0.75,'Health: 0','FontSize',12,'Color','w');
-%overlapText   = text(0.1,0.7,'overlap: 0','FontSize',12,'Color','w');
+
 
 health = 100;
 heart = 0;
@@ -287,7 +287,7 @@ while ishandle(H)
     set(dragText,'String',sprintf('Drag: %.2f N',F_drag+F_dragx));
     set(velText,'String',sprintf('Velocity: %.2f',sqrt(((y(2))^2)+((x(2))^2))));
     set(healthText,'String',sprintf('Health: %.2f',health));
-    %set(overlapText,'String',sprintf('overlap: %.2f',overlap));
+   
 
    
 
