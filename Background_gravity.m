@@ -8,7 +8,7 @@ clc
 
 
 % Declare global variables 
-global m rho Cd A uy ux  F_drag F_dragx xl yl g
+global m rho Cd A   F_drag F_dragx xl yl g
  
 % Declare physical constants 
 m   = 10; % mass (kg)
@@ -17,8 +17,8 @@ Cd  = 10; % drag coefficient
 A   = 10; % cross-sectional area (m^2)
 g = 9.81; % gravitational acceleration (m/s^2)
  
-uy = 0; % applied force
-ux = 0;
+%uy = 0; % applied force
+%ux = 0;
 F_drag = 0;      % drag force
 F_dragx = 0;
 xl = 125;
@@ -169,8 +169,8 @@ while ishandle(H)
 
 
     % ----- RK4 Integration -----
-    y = RK4(y, dt, h);
-    x = RK4x(x, dt, h);
+    y = RK4(y, dt, h, uy);
+    x = RK4x(x, dt, h, ux);
 
     % ----- Boundary Limits -----
     if y(1) > 0
@@ -310,28 +310,28 @@ clear arduinoObj
 % RK4 FUNCTION
 % ============================================================
  
-function y_new = RK4(y, dt, h)
+function y_new = RK4(y, dt, h, uy)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*f(y, h);
-    k2=dt*f(y+a21*k1, h);
-    k3=dt*f(y+a31*k1+a32*k2, h);
-    k4=dt*f(y+a41*k1+a42*k2+a43*k3, h);
+    k1=dt*f(y, h, uy);
+    k2=dt*f(y+a21*k1, h, uy);
+    k3=dt*f(y+a31*k1+a32*k2, h, uy);
+    k4=dt*f(y+a41*k1+a42*k2+a43*k3, h, uy);
 
     y_new=y+w1*k1+w2*k2+w3*k3+w4*k4;
 end
 
 
 
-function x_new = RK4x(x, dt, h)
+function x_new = RK4x(x, dt, h, ux)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx(x, h);
-    k2=dt*fx(x+a21*k1, h);
-    k3=dt*fx(x+a31*k1+a32*k2, h);
-    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h);
+    k1=dt*fx(x, h, ux);
+    k2=dt*fx(x+a21*k1, h, ux);
+    k3=dt*fx(x+a31*k1+a32*k2, h, ux);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux);
 
     x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
@@ -340,9 +340,9 @@ end
 % DYNAMICS FUNCTION
 % ============================================================
  
-function dxdt = f(y, h)
+function dxdt = f(y, h, uy)
  
-    global m rho Cd A uy F_drag g
+    global m rho Cd A  F_drag g
  
     dxdt = zeros(2,1);
  
@@ -355,9 +355,9 @@ function dxdt = f(y, h)
     dxdt(2) = (uy - F_drag - g*m) / m;
 end
  
-function dxdtx = fx(x, h)
+function dxdtx = fx(x, h, ux)
  
-    global m rho Cd A ux F_dragx
+    global m rho Cd A F_dragx
  
     dxdtx = zeros(2,1);
  
