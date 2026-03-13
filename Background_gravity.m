@@ -62,7 +62,10 @@ scale = 0.04;
 
 %[b_img, a_img, ~] = size(ball);
  
-% State vector: x = [position; velocity]
+
+
+[mx, my, ~] = size(marshmellow);
+
 x = [0;0];
 y = [0;0];
 dt = 0.02;
@@ -73,15 +76,21 @@ H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-sc
 Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
 K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
 W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
+
+H2 = image(marshmellow,'XData',[screenx-scale+100/(xl*2) screenx+scale+100/(2*xl)], 'YData',[0-scale+10/(yl*2) 0+scale+10/(2*yl)], 'AlphaData',alpham);
 % ----- Debug Text -----
 forceText = text(0.1,0.9,'Force: 0 N','FontSize',12,'Color','w');
 dragText  = text(0.1,0.85,'Drag: 0 N','FontSize',12,'Color','w');
 velText   = text(0.1,0.8,'Velocity: 0','FontSize',12,'Color','w');
 healthText   = text(0.1,0.75,'Health: 0','FontSize',12,'Color','w');
+%overlapText   = text(0.1,0.7,'overlap: 0','FontSize',12,'Color','w');
 
 health = 100;
+heart = 0;
 T = 100;
- 
+
+x2 = screenx + 100/(2*xl);
+y2 = 0+10/(2*yl);
 %% ---------------- MAIN LOOP ----------------
 while ishandle(H)
  
@@ -118,7 +127,7 @@ while ishandle(H)
                       
                    end  
                 else
-                    uy = -1000;  % Reset applied force if within deadband
+                    uy = 0;  % Reset applied force if within deadband
                     j =0;
                 end
 
@@ -144,12 +153,7 @@ while ishandle(H)
                 
                 btn1 = num(4);
 
-                if btn1 == 0
-
-                    health = health - (0.025 + (abs(ux) + abs(uy))*0.0001)*crouch;
-                end
-
-                h = 1.0+(100.0-health)*0.05;
+                h = 1.0+(100.0-health)*0.01;
     end
         
     if raw <10
@@ -159,20 +163,10 @@ while ishandle(H)
         c = 1;
     end    
  
-    if btn1 == 1
+    
+    
 
-        b = 0;
-    else 
-        b = 1;
-    end   
 
-    if ux < -10
-
-        back = -1;
-    else 
-        back = 1;
-
-    end    
 
     % ----- RK4 Integration -----
     y = RK4(y, dt, h);
@@ -196,6 +190,8 @@ while ishandle(H)
         x(2) = 0;
     end
 
+
+   
      if c == 0
 
         T = 0.2;
@@ -208,17 +204,90 @@ while ishandle(H)
  
     x1 = (x(1)+xl)/(2*xl);
     y1 = (y(1)+yl)/(2*yl);
+
+    if x1 > x2
+
+        back = -1;
+        
+    else 
+        back = 1;
+
+    end    
+    
+  
+    if btn1 == 0
+        b = 0;
+
+        if back == 1
+
+            if (x1 + 30/(2*xl)) > x2
+
+                if x1  < x2
+
+                    if y1 < y2
+
+                        heart =  (0.025 + (abs(ux) + abs(uy))*0.0001)*crouch;
+                    else 
+                        heart =0;
+                    end
+                else 
+                    heart =0;
+
+                end
+            else 
+                heart = 0;
+
+            end 
+
+        end
+
+        if back ==-1
+
+            if (x1 - 30/(2*xl)) < x2
+
+                if x1  > x2
+
+                    if y1 < y2
+
+                        heart =  (0.025 + (abs(ux) + abs(uy))*0.0001)*crouch;
+                    else 
+                        heart =0;
+                    end
+                else 
+                    heart =0;
+
+                end
+            else 
+                heart = 0;
+
+            end 
+
+        end
+
+        health = health - heart;
+    
+    else 
+        b = 1;
+    end  
+    
+        
+    
+
     % ----- Update Ball -----
-    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/yl y1+scale+10/yl]);
-    set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/yl+5*c/yl y1+scale+15/yl+5*c/yl]);
-    set(K,'XData',[x1-scale+7*back/xl+5*b*back/xl x1+scale+7*back/xl+5*back*b/xl], 'YData',[y1-scale+(12+7*up*b)/yl y1+scale+(12+7*up*b)/yl], 'AlphaData',alpha); 
-    set(W,'XData',[x1-scale*s+4/xl x1+scale*s+4/xl], 'YData',[y1-scale*s+12/yl y1+scale*s+12/yl], 'AlphaData',T); 
+    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/(2*yl) y1+scale+10/(2*yl)]);
+    set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/(2*yl)+5*c/(2*yl) y1+scale+15/(2*yl)+5*c/(2*yl)]);
+    set(K,'XData',[x1-scale+7*back/(2*xl)+5*b*back/(2*xl) x1+scale+7*back/xl+5*back*b/(2*xl)], 'YData',[y1-scale+(12+7*up*b)/(2*yl) y1+scale+(12+7*up*b)/(2*yl)], 'AlphaData',alpha); 
+    set(W,'XData',[x1-scale*s+4/(2*xl) x1+scale*s+4/(2*xl)], 'YData',[y1-scale*s+12/(2*yl) y1+scale*s+12/(2*yl)], 'AlphaData',T); 
+
+    set(H2,'XData',[x2-scale x2+scale], 'YData',[y2-scale y2+scale], 'AlphaData',alpham); 
+
 % ----- Debug Text -----
     % ----- Update Debug Text -----
     set(forceText,'String',sprintf('Force: %.2f N',abs(uy)+abs(ux)));
     set(dragText,'String',sprintf('Drag: %.2f N',F_drag+F_dragx));
     set(velText,'String',sprintf('Velocity: %.2f',sqrt(((y(2))^2)+((x(2))^2))));
     set(healthText,'String',sprintf('Health: %.2f',health));
+    %set(overlapText,'String',sprintf('overlap: %.2f',overlap));
 
    
 
@@ -333,3 +402,4 @@ end
     
   
 %end
+
