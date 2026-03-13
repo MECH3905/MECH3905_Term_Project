@@ -32,57 +32,84 @@ configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
  
 %% ---------------- FIGURE SETUP ----------------
-%[bg, ball, alpha] = figure_setup(); 
-figure('position',[400 100 700 700])
-ax = gca;
+clear all
+close all
+clc
+
+screenSize = get(0,'ScreenSize');
+
+screenW = screenSize(3);
+screenH = screenSize(4);
+
+figH = screenH;
+figW = figH * 16/9;
+
+figure('WindowState','maximized', ...
+       'Toolbar','none', ...
+       'MenuBar','none', ...
+       'Color','k');
+
+ax = axes;
 ax.Position = [0 0 1 1];
-axis off; hold on
-set(gcf,'Toolbar','none','Menu','none');
-set(gca,'visible','off');
-set(gcf,'color','w');
-% Background
-bg = imread('backgroundSquare.jpg'); bg = flipud(bg);
-image('CData',bg,'XData',[0 1],'YData',[0 1])
-set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
-    
- 
-  
+axis off
+hold on
 
-    ylim([0 1])
-    xlim([0 1])
- 
-    [ball,~,alpha] = imread('circle_black_transparent.png');
-    ball = flipud(ball);
-    alpha = flipud(alpha);
-    
-    [marshmellow,~,alpham] = imread('marshmallow.png');
-     marshmellow = flipud(marshmellow);
-    alpham = flipud(alpham);
-scale = 0.04;
+%% Background
+bg = imread('background.jpg');
+bg = flipud(bg);
 
-%[b_img, a_img, ~] = size(ball);
- 
-% State vector: x = [position; velocity]
-x = [0;0];
-y = [0;0];
-dt = 0.02;
-screenx = 0.25;
-screeny = 0.5;
+image('CData',bg,'XData',[0 16],'YData',[0 9])
 
-H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
-Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
-K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
-W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
-% ----- Debug Text -----
-forceText = text(0.1,0.9,'Force: 0 N','FontSize',12,'Color','w');
-dragText  = text(0.1,0.85,'Drag: 0 N','FontSize',12,'Color','w');
-velText   = text(0.1,0.8,'Velocity: 0','FontSize',12,'Color','w');
-healthText   = text(0.1,0.75,'Health: 0','FontSize',12,'Color','w');
+xlim([0 16])
+ylim([0 9])
+axis manual
+axis off
+
+
+% Load Images
+[ball,~,alpha] = imread('Ball.png');
+ball = flipud(ball);
+alpha = flipud(alpha);
+
+[marshmellow,~,alpham] = imread('marshmallow.png');
+marshmellow = flipud(marshmellow);
+alpham = flipud(alpham);
+
+
+% Object scale
+scale = 0.35;
+
+screenx = 4; %Object positions 
+screeny = 4.5; %Object positions 
+
+
+% Draw marshmallow
+H = image(marshmellow,...
+    'XData',[screenx-scale screenx+scale], ...
+    'YData',[screeny-scale+0.6 screeny+scale+0.6], ...
+    'AlphaData',alpham);
+
+
+% Draw balls
+Q = image(ball,...
+    'XData',[screenx-scale screenx+scale], ...
+    'YData',[screeny-scale+1.2 screeny+scale+1.2], ...
+    'AlphaData',alpha);
+
+K = image(ball,...
+    'XData',[screenx-scale+0.7 screenx+scale+0.7], ...
+    'YData',[screeny-scale+1 screeny+scale+1], ...
+    'AlphaData',alpha);
+
+W = image(ball,...
+    'XData',[screenx-scale+0.4 screenx+scale+0.4], ...
+    'YData',[screeny-scale+1 screeny+scale+1], ...
+    'AlphaData',alpha);
 
 health = 100;
 T = 100;
  
-%% ---------------- MAIN LOOP ----------------
+% ---------------- MAIN LOOP ----------------
 while ishandle(H)
  
  
