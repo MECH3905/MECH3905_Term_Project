@@ -2,10 +2,6 @@ clear all
 close all
 clc
 
-xl = 125;
-yl = 75;
-
-%% ---------------- FIGURE SETUP ----------------
 %[bg, ball, alpha] = figure_setup(); 
 screenSize = get(0,'ScreenSize');
 
