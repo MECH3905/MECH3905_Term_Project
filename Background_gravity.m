@@ -72,7 +72,7 @@ set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     dhb_top    = 0.97;  
 
 
-    [ball,~,alpha] = imread('Ball.png');
+    [ball,~,alpha] = imread('Toothpick.png');
     ball = flipud(ball);
     alpha = flipud(alpha);
     
@@ -105,7 +105,7 @@ DHB = image(Black_HB, ...
     'AlphaData', alphadhb);
 
 H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
-Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
+%Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
 K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
 W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
 
@@ -308,7 +308,7 @@ while ishandle(H)
 
     % ----- Update Ball -----
     set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/(2*yl) y1+scale+10/(2*yl)]);
-    set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/(2*yl)+5*c/(2*yl) y1+scale+15/(2*yl)+5*c/(2*yl)]);
+    %set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/(2*yl)+5*c/(2*yl) y1+scale+15/(2*yl)+5*c/(2*yl)]);
     set(K,'XData',[x1-scale+7*back/(2*xl)+5*b*back/(2*xl) x1+scale+7*back/xl+5*back*b/(2*xl)], 'YData',[y1-scale+(12+7*up*b)/(2*yl) y1+scale+(12+7*up*b)/(2*yl)], 'AlphaData',alpha); 
     set(W,'XData',[x1-scale*s+4/(2*xl) x1+scale*s+4/(2*xl)], 'YData',[y1-scale*s+12/(2*yl) y1+scale*s+12/(2*yl)], 'AlphaData',T); 
 
