@@ -26,7 +26,7 @@ yl = 75;
 
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
+arduinoObj = serialport("COM3",115200);   % <<< CHANGE IF NEEDED
 pause(2)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
@@ -51,7 +51,28 @@ set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
     ylim([0 1])
     xlim([0 1])
  
-    [ball,~,alpha] = imread('circle_black_transparent.png');
+    [Health_Bar,~,alphahb] = imread('Health_Bar.png');
+    Health_Bar = flipud(Health_Bar);
+    Health_Bar = fliplr(Health_Bar);
+
+    alphahb = flipud(alphahb);
+
+    [Black_HB,~,alphadhb] = imread('Black_HB.png');
+    alphadhb = flipud(alphadhb);
+    
+    hb_width  = 0.18;   
+    hb_height = 0.06;   
+    hb_left   = 0.01;   
+    hb_top    = 0.97;  
+  
+    blackw = 0.000001;
+    dhb_width  = 0.18*blackw;   
+    dhb_height = 0.06;   
+    dhb_left   = 0.01;   
+    dhb_top    = 0.97;  
+
+
+    [ball,~,alpha] = imread('Ball.png');
     ball = flipud(ball);
     alpha = flipud(alpha);
     
@@ -71,6 +92,17 @@ y = [0;0];
 dt = 0.02;
 screenx = 0.25;
 screeny = 0.5;
+
+
+HB = image(Health_Bar, ...
+    'XData',[hb_left, hb_left + hb_width], ...
+    'YData',[hb_top - hb_height, hb_top], ...
+    'AlphaData', alphahb);
+
+DHB = image(Black_HB, ...
+    'XData',[dhb_left, dhb_left + dhb_width], ...
+    'YData',[dhb_top - hb_height, dhb_top], ...
+    'AlphaData', alphadhb);
 
 H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
 Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
@@ -271,7 +303,8 @@ while ishandle(H)
     end  
     
         
-    
+    blackw = 1.000001 - health/100;
+    dhb_width  = 0.18*blackw;
 
     % ----- Update Ball -----
     set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/(2*yl) y1+scale+10/(2*yl)]);
@@ -280,6 +313,11 @@ while ishandle(H)
     set(W,'XData',[x1-scale*s+4/(2*xl) x1+scale*s+4/(2*xl)], 'YData',[y1-scale*s+12/(2*yl) y1+scale*s+12/(2*yl)], 'AlphaData',T); 
 
     set(H2,'XData',[x2-scale x2+scale], 'YData',[y2-scale y2+scale], 'AlphaData',alpham); 
+
+    set(DHB, 'XData',[dhb_left dhb_left+dhb_width], ...
+    'YData',[hb_top - hb_height hb_top], ...
+    'AlphaData', alphadhb);
+
 
 % ----- Debug Text -----
     % ----- Update Debug Text -----
