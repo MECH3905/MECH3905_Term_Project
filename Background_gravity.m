@@ -26,7 +26,7 @@ yl = 75;
 
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj = serialport("COM3",115200);   % <<< CHANGE IF NEEDED
+arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
 pause(2)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
@@ -103,6 +103,8 @@ DHB = image(Black_HB, ...
     'XData',[dhb_left, dhb_left + dhb_width], ...
     'YData',[dhb_top - hb_height, dhb_top], ...
     'AlphaData', alphadhb);
+
+
 
 H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
 %Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
@@ -241,17 +243,18 @@ while ishandle(H)
 
         back = -1;
         
+        
     else 
         back = 1;
-
+       
     end    
-    
+   
   
     if btn1 == 0
-        b = 0;
+        b = 1;
 
         if back == 1
-
+                
             if (x1 + 30/(2*xl)) > x2
 
                 if x1  < x2
@@ -299,7 +302,7 @@ while ishandle(H)
         health = health - heart;
     
     else 
-        b = 1;
+        b = 0;
     end  
     
         
@@ -309,7 +312,7 @@ while ishandle(H)
     % ----- Update Ball -----
     set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/(2*yl) y1+scale+10/(2*yl)]);
     %set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/(2*yl)+5*c/(2*yl) y1+scale+15/(2*yl)+5*c/(2*yl)]);
-    set(K,'XData',[x1-scale+7*back/(2*xl)+5*b*back/(2*xl) x1+scale+7*back/xl+5*back*b/(2*xl)], 'YData',[y1-scale+(12+7*up*b)/(2*yl) y1+scale+(12+7*up*b)/(2*yl)], 'AlphaData',alpha); 
+    set(K,'XData',[x1-scale+5*back/(2*xl)+7*b*back/(2*xl) x1+scale+5*back/(xl*2)+7*back*b/(2*xl)], 'YData',[y1-scale+(15+7*up*b)/(2*yl) y1+scale+(15+7*up*b)/(2*yl)], 'AlphaData',alpha); 
     set(W,'XData',[x1-scale*s+4/(2*xl) x1+scale*s+4/(2*xl)], 'YData',[y1-scale*s+12/(2*yl) y1+scale*s+12/(2*yl)], 'AlphaData',T); 
 
     set(H2,'XData',[x2-scale x2+scale], 'YData',[y2-scale y2+scale], 'AlphaData',alpham); 
@@ -320,14 +323,14 @@ while ishandle(H)
 
 
 % ----- Debug Text -----
-    % ----- Update Debug Text -----
+  
     set(forceText,'String',sprintf('Force: %.2f N',abs(uy)+abs(ux)));
     set(dragText,'String',sprintf('Drag: %.2f N',F_drag+F_dragx));
     set(velText,'String',sprintf('Velocity: %.2f',sqrt(((y(2))^2)+((x(2))^2))));
     set(healthText,'String',sprintf('Health: %.2f',health));
    
 
-   
+   %C = viscircles([x1 y1], 50, 'colour', [1 0 0 0.5]);
 
 
     drawnow limitrate
@@ -337,11 +340,16 @@ while ishandle(H)
         break
 
     end
-    
-    
-    
+  %{  
+    if x1 > x2
+
+       ball = fliplr(ball);
+       alpha = fliplr(alpha);
+
+    end    
+  %}
 end
- 
+     
 clear arduinoObj
  
 %% ============================================================
