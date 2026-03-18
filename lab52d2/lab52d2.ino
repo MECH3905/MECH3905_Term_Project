@@ -1,15 +1,15 @@
 // Button Presses 
-const int jumpPin = 4; // Declare jump button to represent digital pin 4
-const int dashPin = 5; // Declare dash button to represent digital pin 5
-const int crouchPin = 6; // Declare crouch button to represent digital pin 6
-const int jabPin = 7; // Declare jab button to represent digital pin 7
+const int jumpPin = 4;   // Digital pin 4 connected to the jump button
+const int dashPin = 5;   // Digital pin 5 connected to the dash button
+const int crouchPin = 6; // Digital pin 6 connected to the crouch button
+const int jabPin = 7;    // Digital pin 7 connected to the jab button
 
-const int yPin = A0; // Declare y direction of joystick to represent analog pin 0
-const int xPin = A1; // Declare x direction of joystick to represent analog pin 1
+const int yPin = A0; // Analog pin 0 connected to the y direction of joystick movement 
+const int xPin = A1; // Analog pin 1 connected to the x direction of joystick movement 
 
-long counter = 0;
-unsigned long lastDebounceTime = 0;  // Innizalize the last time a button was pressed to 0
-unsigned long debounce = 50; // Declare a debounce variable equal to 50 miliseconds
+long counter = 0;                   
+unsigned long lastDebounceTime = 0; 
+unsigned long debounce = 50;        
 
 bool jumpBtn = 1;
 bool dashBtn = 1;
@@ -22,7 +22,7 @@ int k = 0;
 int l = 0;
 
 void setup() {
-  Serial.begin(115200); // Baud rate MUST match MATLAB
+  Serial.begin(115200); // Initialize serial communication at a baud rate of 115200 MUST match MATLAB
 
   pinMode(jumpPin, INPUT); // Declare jumpPin as an input
   pinMode(dashPin, INPUT); // Declare dashPin as an input
@@ -116,5 +116,6 @@ void loop() {
       jabBtn = 1;
     }
   Serial.println(String(String(counter)+","+String(yValue)+","+String(xValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn)));
+  
   delay(10);
 }
