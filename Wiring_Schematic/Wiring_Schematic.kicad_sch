@@ -641,20 +641,24 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "Dual_Axis_Joystick"
-				(at 0 2.032 0)
+			(property "Reference" "A2"
+				(at 7.62 -7.6199 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" ""
-				(at 0 0 0)
+			(property "Value" "Dual_Axis_Joystick"
+				(at 7.62 -10.1599 0)
 				(effects
 					(font
 						(size 1.27 1.27)
+						(thickness 0.254)
+						(bold yes)
 					)
+					(justify left)
 				)
 			)
 			(property "Footprint" ""
@@ -779,7 +783,7 @@
 							)
 						)
 					)
-					(number "1"
+					(number "5"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1835,6 +1839,16 @@
 	)
 	(wire
 		(pts
+			(xy 158.75 106.68) (xy 184.15 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "70ed8991-c68c-41b7-b20d-c70e074d20fb")
+	)
+	(wire
+		(pts
 			(xy 125.73 127) (xy 125.73 135.89)
 		)
 		(stroke
@@ -1855,7 +1869,7 @@
 	)
 	(wire
 		(pts
-			(xy 158.75 109.22) (xy 158.75 116.84)
+			(xy 158.75 106.68) (xy 158.75 116.84)
 		)
 		(stroke
 			(width 0)
@@ -1962,16 +1976,6 @@
 			(type default)
 		)
 		(uuid "94e288d2-697d-469d-aeec-4f89d132903e")
-	)
-	(wire
-		(pts
-			(xy 158.75 109.22) (xy 184.15 109.22)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a7363f92-7c67-4bd3-b5e2-505456b1594b")
 	)
 	(wire
 		(pts
@@ -2887,7 +2891,7 @@
 		(pin "3"
 			(uuid "9adfcdba-fb52-4cc9-a3c4-2853fa53f08f")
 		)
-		(pin "1"
+		(pin "5"
 			(uuid "1d1e8e28-3019-41b0-bc57-58a93086c26c")
 		)
 		(pin "4"
