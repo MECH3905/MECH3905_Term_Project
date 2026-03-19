@@ -1,121 +1,122 @@
 // Button Presses 
-const int jumpPin = 4;   // Digital pin 4 connected to the jump button
-const int dashPin = 5;   // Digital pin 5 connected to the dash button
-const int crouchPin = 6; // Digital pin 6 connected to the crouch button
-const int jabPin = 7;    // Digital pin 7 connected to the jab button
 
-const int yPin = A0; // Analog pin 0 connected to the y direction of joystick movement 
-const int xPin = A1; // Analog pin 1 connected to the x direction of joystick movement 
+// Button Pins
+const int jumpPin = 4;
+const int dashPin = 5;
+const int crouchPin = 6;
+const int jabPin = 7;
 
-long counter = 0;                   
-unsigned long lastDebounceTime = 0; 
-unsigned long debounce = 50;        
+// Joystick Pins
+const int xPin = A0;
+const int yPin = A1;
 
+// Debounce
+const unsigned long debounceDelay = 50;
+
+// Button outputs 
 bool jumpBtn = 1;
 bool dashBtn = 1;
 bool crouchBtn = 1;
 bool jabBtn = 1;
 
-int i = 0;
-int j = 0;
-int k = 0;
-int l = 0;
+// States
+int lastJumpReading = HIGH;
+int lastDashReading = HIGH;
+int lastJabReading  = HIGH;
+
+int stableJumpState = HIGH;
+int stableDashState = HIGH;
+int stableJabState  = HIGH;
+
+unsigned long lastDebounceTimeJump = 0;
+unsigned long lastDebounceTimeDash = 0;
+unsigned long lastDebounceTimeJab  = 0;
+
+long counter = 0;
 
 void setup() {
-  Serial.begin(115200); // Initialize serial communication at a baud rate of 115200 MUST match MATLAB
+  Serial.begin(115200);
 
-  pinMode(jumpPin, INPUT); // Declare jumpPin as an input
-  pinMode(dashPin, INPUT); // Declare dashPin as an input
-  pinMode(crouchPin, INPUT); // Declare crouchPin as an input
-  pinMode(jabPin, INPUT); // Declare jabPin as an input
+  pinMode(jumpPin, INPUT);
+  pinMode(dashPin, INPUT);
+  pinMode(crouchPin, INPUT);
+  pinMode(jabPin, INPUT);
 
-  delay(500); // Pause for 500 miliseconds to allow MATLAb to setup
+  delay(500);
 }
- 
+
 void loop() {
 
-  int yValue = analogRead(yPin);  
-    
-  int xValue = analogRead(xPin); 
+  int xValue = analogRead(xPin);
+  int yValue = analogRead(yPin);
 
   // JUMP BUTTON
-  int jumpBtnState = digitalRead(jumpPin); // Set the current button state equal to the current reading from the input pin
+  int jumpReading = digitalRead(jumpPin);
 
-    if (i <= 5){
+  if (jumpReading != lastJumpReading) {
+    lastDebounceTimeJump = millis();
+  }
 
-      if (jumpBtnState == LOW){
+  if ((millis() - lastDebounceTimeJump) > debounceDelay) {
+    if (jumpReading != stableJumpState) {
+      stableJumpState = jumpReading;
 
-        int current_time = millis();
-
-        if(current_time - lastDebounceTime > debounce){
-            
-          jumpBtn = 0;
-        }
-
-        lastDebounceTime = current_time;
-
-        i++;
+      if (stableJumpState == LOW) { 
+        jumpBtn = 0; 
       }
     }
+  }
 
-    else{
-      i = 0;
-      jumpBtn = 1;
-    }
+  lastJumpReading = jumpReading;
 
-  // DASH BUTTON 
-  int dashBtnState = digitalRead(dashPin); // Set the current button state equal to the current reading from the input pin
+  // DASH BUTTOn 
+  int dashReading = digitalRead(dashPin);
 
-    if (j <= 5){
+  if (dashReading != lastDashReading) {
+    lastDebounceTimeDash = millis();
+  }
 
-      if (dashBtnState == LOW){
+  if ((millis() - lastDebounceTimeDash) > debounceDelay) {
+    if (dashReading != stableDashState) {
+      stableDashState = dashReading;
 
-        int current_time = millis();
-
-        if(current_time - lastDebounceTime > debounce){
-            
-          dashBtn = 0;
-        }
-
-        lastDebounceTime = current_time;
-
-        j++;
+      if (stableDashState == LOW) {
+        dashBtn = 0;
       }
     }
+  }
 
-    else{
-      i = 0;
-      dashBtn = 1;
-    }
+  lastDashReading = dashReading;
 
-  // CROUCH BUTTON 
-  int crouchBtnState = digitalRead(crouchPin); // Set the current button state equal to the current reading from the input pin
+  // JAB BUTTON
+  int jabReading = digitalRead(jabPin);
 
-  // JAB BUTTON 
-  int jabBtnState = digitalRead(jabPin); // Set the current button state equal to the current reading from the input pin
+  if (jabReading != lastJabReading) {
+    lastDebounceTimeJab = millis();
+  }
 
-    if (l <= 5){
+  if ((millis() - lastDebounceTimeJab) > debounceDelay) {
+    if (jabReading != stableJabState) {
+      stableJabState = jabReading;
 
-      if (jabBtnState == LOW){
-
-        int current_time = millis();
-
-        if(current_time - lastDebounceTime > debounce){
-            
-          jabBtn = 0;
-        }
-
-        lastDebounceTime = current_time;
-
-        l++;
+      if (stableJabState == LOW) {
+        jabBtn = 0;
       }
     }
+  }
 
-    else{
-      i = 0;
-      jabBtn = 1;
-    }
-  Serial.println(String(String(counter)+","+String(yValue)+","+String(xValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn)));
-  
+  lastJabReading = jabReading;
+
+  // CROUCH BUTTON
+  crouchBtn = digitalRead(crouchPin);
+
+
+  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn));
+
+  jumpBtn = 1;
+  dashBtn = 1;
+  jabBtn = 1;
+
+  counter++;
   delay(10);
 }
