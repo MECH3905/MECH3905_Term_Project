@@ -1,70 +1,122 @@
+// Button Presses 
 
+// Button Pins
+const int jumpPin = 4;
+const int dashPin = 5;
+const int crouchPin = 6;
+const int jabPin = 7;
 
-// ============================================
-// MECH Lab - MATLAB Communication (Y Only)
-// Sends: counter,yValue
-// ============================================
-const int button1Pin = 7; 
-const int button2Pin = 6; 
-const int yPin = A0;
-const int xPin = A1;
+// Joystick Pins
+const int xPin = A0;
+const int yPin = A1;
+
+// Debounce
+const unsigned long debounceDelay = 50;
+
+// Button outputs 
+bool jumpBtn = 1;
+bool dashBtn = 1;
+bool crouchBtn = 1;
+bool jabBtn = 1;
+
+// States
+int lastJumpReading = HIGH;
+int lastDashReading = HIGH;
+int lastJabReading  = HIGH;
+
+int stableJumpState = HIGH;
+int stableDashState = HIGH;
+int stableJabState  = HIGH;
+
+unsigned long lastDebounceTimeJump = 0;
+unsigned long lastDebounceTimeDash = 0;
+unsigned long lastDebounceTimeJab  = 0;
+
 long counter = 0;
 
-unsigned long lastButton = 0;  // the last time the output pin was toggled
-unsigned long debounce = 50;  
-
-bool btn1 = 1;
-int i = 0;
 void setup() {
-  Serial.begin(115200);   // MUST match MATLAB
-  pinMode(button1Pin, INPUT);
-  pinMode(button2Pin, INPUT);
+  Serial.begin(115200);
+
+  pinMode(jumpPin, INPUT);
+  pinMode(dashPin, INPUT);
+  pinMode(crouchPin, INPUT);
+  pinMode(jabPin, INPUT);
+
   delay(500);
 }
- 
+
 void loop() {
 
-    
+  int xValue = analogRead(xPin);
+  int yValue = analogRead(yPin);
 
-    int yValue = analogRead(yPin);  
-    
-    int xValue = analogRead(xPin);
-    
-    
-     
-     
-    int button1State = digitalRead(button1Pin);         // the current reading from the input pin
+  // JUMP BUTTON
+  int jumpReading = digitalRead(jumpPin);
 
-      if (i <= 5){
-      if (button1State == LOW){
-          int current_time = millis();
+  if (jumpReading != lastJumpReading) {
+    lastDebounceTimeJump = millis();
+  }
 
-          if(current_time - lastButton > debounce){
+  if ((millis() - lastDebounceTimeJump) > debounceDelay) {
+    if (jumpReading != stableJumpState) {
+      stableJumpState = jumpReading;
 
-            
-            btn1 = 0;
-          }
-          
-
-          lastButton = current_time;
-
-          i++;
+      if (stableJumpState == LOW) { 
+        jumpBtn = 0; 
       }
+    }
+  }
+
+  lastJumpReading = jumpReading;
+
+  // DASH BUTTOn 
+  int dashReading = digitalRead(dashPin);
+
+  if (dashReading != lastDashReading) {
+    lastDebounceTimeDash = millis();
+  }
+
+  if ((millis() - lastDebounceTimeDash) > debounceDelay) {
+    if (dashReading != stableDashState) {
+      stableDashState = dashReading;
+
+      if (stableDashState == LOW) {
+        dashBtn = 0;
       }
-      else{
-        i = 0;
-        btn1 = 1;
-         
+    }
+  }
+
+  lastDashReading = dashReading;
+
+  // JAB BUTTON
+  int jabReading = digitalRead(jabPin);
+
+  if (jabReading != lastJabReading) {
+    lastDebounceTimeJab = millis();
+  }
+
+  if ((millis() - lastDebounceTimeJab) > debounceDelay) {
+    if (jabReading != stableJabState) {
+      stableJabState = jabReading;
+
+      if (stableJabState == LOW) {
+        jabBtn = 0;
       }
+    }
+  }
+
+  lastJabReading = jabReading;
+
+  // CROUCH BUTTON
+  crouchBtn = digitalRead(crouchPin);
 
 
-    int button2State = digitalRead(button2Pin);
- 
+  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn));
 
-  
- 
+  jumpBtn = 1;
+  dashBtn = 1;
+  jabBtn = 1;
 
-  Serial.println(String(String(counter)+","+String(yValue)+","+String(xValue)+","+String(btn1)+","+String(button2State)));
+  counter++;
   delay(10);
-
 }
