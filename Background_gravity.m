@@ -26,7 +26,7 @@ yl = 75;
 
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
+arduinoObj = serialport("COM3",115200);   % <<< CHANGE IF NEEDED
 pause(2)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
@@ -139,7 +139,7 @@ while ishandle(H)
             num = str2double(tmp);
 
                 raw = num(2);
-                btn2 = num(5);
+                btn2 = num(4);
                 % Deadband
                 if (raw - 512) > 300
                         
@@ -152,7 +152,7 @@ while ishandle(H)
                 if btn2 == 0
                         
                   
-                    uy = 1000;
+                    uy = 5000;
                     
                    j=j+1;
 
@@ -185,7 +185,7 @@ while ishandle(H)
                 end
  
                 
-                btn1 = num(4);
+                btn1 = num(6);
 
                 h = 1.0+(100.0-health)*0.01;
     end
