@@ -33,6 +33,10 @@ unsigned long lastDebounceTimeDash = 0;
 unsigned long lastDebounceTimeJab  = 0;
 
 long counter = 0;
+int i = 0;
+int k = 0;
+int l = 0;
+
 
 void setup() {
   Serial.begin(115200);
@@ -52,7 +56,7 @@ void loop() {
 
   // JUMP BUTTON
   int jumpReading = digitalRead(jumpPin);
-
+/*
   if (jumpReading != lastJumpReading) {
     lastDebounceTimeJump = millis();
   }
@@ -68,6 +72,24 @@ void loop() {
   }
 
   lastJumpReading = jumpReading;
+*/
+
+ if (i>20){
+    if (jumpReading == 0){
+        if(l<30){
+          jumpBtn = 0;
+          l++;
+          
+        }
+        
+    }else{
+      i=0;
+      jumpBtn = 1;
+      l = 0;
+    }
+ }
+
+ i++;
 
   // DASH BUTTOn 
   int dashReading = digitalRead(dashPin);
@@ -89,29 +111,103 @@ void loop() {
   lastDashReading = dashReading;
 
   // JAB BUTTON
-  int jabReading = digitalRead(jabPin);
+  bool jabReading = digitalRead(jabPin);
 
+  /*
   if (jabReading != lastJabReading) {
     lastDebounceTimeJab = millis();
   }
 
   if ((millis() - lastDebounceTimeJab) > debounceDelay) {
-    if (jabReading != stableJabState) {
-      stableJabState = jabReading;
+    //if (jabReading != stableJabState) {
+      //stableJabState = jabReading;
 
-      if (stableJabState == LOW) {
+      if (jabReading == 0) {
+        if(i<= 5){
         jabBtn = 0;
+        i++;
+        }
+        else{
+        
+        if(k<=5){
+            jabBtn = 1;
+            k++;
+            i =1;
+        }
+        
+        k = 1;
       }
-    }
+      
+      }
+      
+    //}
+    
   }
-
+  
   lastJabReading = jabReading;
+  */
+ /*
+ if (i<=5){
+    if (jabReading == 0){
+        if(k<=5){
+          jabBtn = 0;
+          k++;
+          i=1;
+        }
+
+    }
+    else{
+      i++;
+      jabBtn = 1;
+      k = 1;
+    }
+ }
+
+ i = 1;
+ */
+ /*
+  if (jabReading == 0){
+    if (i>=50){
+      if(k<=5){
+          jabBtn = 0;
+          k++;
+          i=1;
+        }
+
+  }else{
+    jabBtn = 1;
+    k = 1;
+    i++;
+  }
+  }else{
+    k=1;
+    i++;
+  }
+*/
+ // if (i>20){
+    if (jabReading == 0){
+        if(k<20){
+          jabBtn = 0;
+          k++;
+          
+        }
+        
+    }else{
+      //i=0;
+      jabBtn = 1;
+      k = 0;
+    }
+ //}
+
+ //i++;
+
+
 
   // CROUCH BUTTON
   crouchBtn = digitalRead(crouchPin);
 
 
-  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn));
+  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn)+","+String(i)+","+String(k));
 
   jumpBtn = 1;
   dashBtn = 1;
