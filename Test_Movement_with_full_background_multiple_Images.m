@@ -8,7 +8,7 @@ clc
 
 
 % Declare global variables 
-global m rho Cd A   F_drag F_dragx xl yl g i 
+global m rho Cd A   F_drag F_dragx xl yl g i F_dragx2
  
 % Declare physical constants 
 m   = 10; % mass (kg)
@@ -22,14 +22,17 @@ g = 9.81; % gravitational acceleration (m/s^2)
 F_drag = 0;      % drag force
 F_dragx = 0;
 
+F_dragx2 = 0;
+
 i = 0;
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
-pause(2)
+pause(5)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
- 
+
+
 %% ---------------- FIGURE SETUP ----------------
 [bgWidth,bgHeight,bg, marshmellow, alpham, scale,Health_Bar,alphahb,Black_HB,...
     alphadhb,hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup();
@@ -81,6 +84,8 @@ dt = 0.02;
 screenx = 0.25;
 screeny = 0.5;
 
+xp2 = [0;0];
+u2x = 0;
 
 HB = image(Health_Bar, ...
     'XData',[hb_left, hb_left + hb_width], ...
@@ -112,7 +117,7 @@ health = 100;
 heart = 0;
 T = 100;
 
-x2 = screenx + 100/(2*xl);
+%xp2 = screenx + 100/(2*xl);
 y2 = 0+10/(2*yl);
 %% ---------------- MAIN LOOP ----------------
 while ishandle(H)
@@ -177,6 +182,26 @@ while ishandle(H)
                 btn1 = num(7);
 
                 h = 1.0+(100.0-health)*0.01;
+
+                P2leftBtn = num(8);
+                P2rightBtn = num(9);
+
+                if  P2rightBtn == 1
+                if P2leftBtn == 0
+                    u2x = -100;
+                else 
+                    u2x =0;
+                end
+                end
+                
+                
+                if P2leftBtn == 1
+                if P2rightBtn == 0
+                    u2x = 100;
+                else 
+                    u2x =0;
+                end 
+                end
     end
         
     if raw <10
@@ -194,6 +219,7 @@ while ishandle(H)
     % ----- RK4 Integration -----
     y = RK4(y, dt, h, uy);
     x = RK4x(x, dt, h, ux);
+    xp2 = RK4x2(xp2, dt, h, u2x);
 
     % ----- Boundary Limits -----
     if y(1) > 0
@@ -213,7 +239,13 @@ while ishandle(H)
         x(2) = 0;
     end
 
-
+     if xp2(1) > xl
+        xp2(1) = xl;
+        xp2(2) = 0;
+    elseif xp2(1) < -xl
+        xp2(1) = - xl;
+        xp2(2) = 0;
+    end
    
      if c == 0
 
@@ -227,6 +259,8 @@ while ishandle(H)
  
     x1 = (x(1)+xl)/(2*xl);
     y1 = (y(1)+yl)/(2*yl);
+
+    x2 = (xp2(1)+xl)/(2*xl);
 
     if x1 > x2
 
@@ -370,6 +404,20 @@ function x_new = RK4x(x, dt, h, ux)
 
     x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
+
+
+
+function x2_new = RK4x2(xp2, dt, h, u2x)
+    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
+    a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
+
+    k1=dt*fx2(xp2, h, u2x);
+    k2=dt*fx2(xp2+a21*k1, h, u2x);
+    k3=dt*fx2(xp2+a31*k1+a32*k2, h, u2x);
+    k4=dt*fx2(xp2+a41*k1+a42*k2+a43*k3, h, u2x);
+
+    x2_new=xp2+w1*k1+w2*k2+w3*k3+w4*k4;
+end
  
 %% ============================================================
 % DYNAMICS FUNCTION
@@ -404,6 +452,21 @@ function dxdtx = fx(x, h, ux)
 
     dxdtx(1) = vx;
     dxdtx(2) = (ux - F_dragx) / m; % + mom
+end
+function dxdtx2 = fx2(xp2, h, u2x)
+ 
+    global m rho Cd A F_dragx2
+ 
+    dxdtx2 = zeros(2,1);
+ 
+    vx2 = xp2(2);
+ 
+    % Quadratic drag
+    F_dragx2 = 0.5 * rho * Cd * A * vx2 * abs(vx2) * h;
+
+
+    dxdtx2(1) = vx2;
+    dxdtx2(2) = (u2x - F_dragx2) / m; % + mom
 end
 %% ============================================================
 % FIGURE SETUP FUNCTION
