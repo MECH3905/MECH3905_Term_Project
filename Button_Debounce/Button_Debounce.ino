@@ -1,4 +1,10 @@
-// Button Presses 
+//Player2 Button Pins
+const int leftpin = 9;
+const int rightpin = 8;
+
+//Player2 Button Outputs
+bool leftBtn = 1;
+bool rightBtn = 1;
 
 // Button Pins
 const int jumpPin = 4;
@@ -206,8 +212,10 @@ void loop() {
   // CROUCH BUTTON
   crouchBtn = digitalRead(crouchPin);
 
+  leftBtn = digitalRead(leftpin);
+  rightBtn = digitalRead(rightpin);
 
-  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn)+","+String(i)+","+String(k));
+  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn)+","+String(leftBtn)+","+String(rightBtn));
 
   jumpBtn = 1;
   dashBtn = 1;
