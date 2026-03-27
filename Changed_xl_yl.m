@@ -74,7 +74,7 @@ T = 100;
 y2 = 0.1;
 
 jab_timer = 0;
-
+btn1 = 1;
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
@@ -131,8 +131,9 @@ while ishandle(run)
                     ux = (rawx - 512);
                 end
  
-                if ux == 0
-                x(2) = 0;
+                if ux == 0 && btn1 ~= 0
+                    x(2) = 0;
+                
                 end
                    btn1 = num(7);
 
