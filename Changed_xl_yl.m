@@ -81,7 +81,11 @@ while ishandle(H)
         tmp = split(strtrim(data),',');
  
        
-            num = str2double(tmp);
+           num = str2double(tmp);
+
+           if numel(num) < 9 || any(isnan(num(1:9)))
+              continue
+           end
 
                 raw = num(2);
                 btn2 = num(4);
@@ -128,24 +132,22 @@ while ishandle(H)
                 h = 1.0+(100.0-health)*0.01;
 
                 P2leftBtn = num(8);
-                P2rightBtn = num(9);
+               P2rightBtn = num(9);
 
-                if  P2rightBtn == 1
-                if P2leftBtn == 0
-                    u2x = -200;
-                else 
-                    u2x =0;
-                end
-                end
-                
-                
-                if P2leftBtn == 1
-                if P2rightBtn == 0
-                    u2x = 200;
-                else 
-                    u2x =0;
-                end 
-                end
+
+              if P2rightBtn == 1 && P2leftBtn == 0
+
+                  u2x = -200;
+
+              elseif P2leftBtn == 1 && P2rightBtn == 0
+
+                  u2x = 200;
+
+              else
+
+                  u2x = 0;
+
+              end
     end
         
     if raw <10
