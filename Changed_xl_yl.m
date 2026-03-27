@@ -1,30 +1,24 @@
+
+
 clear all
 close all
 clc
-%<<<<<<< HEAD
- %does this work 
- 
-
-
 
 % Declare global variables 
-global m rho Cd A   F_drag F_dragx xl yl g i F_dragx2
+global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl eq
  
 % Declare physical constants 
-m   = 10; % mass (kg)
-rho = 1.2; % air density (kg/m^3)
-Cd  = 5; % drag coefficient
-A   = 10; % cross-sectional area (m^2)
-g = 9.81; % gravitational acceleration (m/s^2)
- 
-%uy = 0; % applied force
-%ux = 0;
-F_drag = 0;      % drag force
-F_dragx = 0;
+m   = 10;        % mass (kg)
+rho = 1.2;       % air density (kg/m^3)
+Cd  = 5;         % drag coefficient
+A   = 10;        % cross-sectional area (m^2)
+g = 9.81;        % gravitational acceleration (m/s^2)
+F_drag = 0;      % player 1 y-component initial drag force
+F_dragx = 0;     % player 1 x-component initial drag force
+F_dragx2 = 0;    % player 2 x-component initial drag force
+F_drag2 = 0;     % player 2 y-component initial drag force
 
-F_dragx2 = 0;
-
-i = 0;
+eq = 0.000001;      % the Equalizer, makes everything very small to try and fit into 0-1
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
@@ -35,91 +29,47 @@ flush(arduinoObj);
 
 %% ---------------- FIGURE SETUP ----------------
 [bgWidth,bgHeight,bg, marshmellow, alpham, scale,Health_Bar,alphahb,Black_HB,...
-    alphadhb,hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup();
-xl = 125;
-yl = 75;
-%{
-figure('position',[400 100 700 700])
-ax = gca;
-ax.Position = [0 0 1 1];
-axis off; hold on
-set(gcf,'Toolbar','none','Menu','none');
-set(gca,'visible','off');
-set(gcf,'color','w');
-% Background
-bg = imread('Campfire_Smackdown_Backdrop.jpg'); bg = flipud(bg);
-image('CData',bg,'XData',[0 1],'YData',[0 1])
-set(gca,'XLim',[0 1],'YLim',[0 1]); axis off
-    
- 
-  
+    alphadhb,hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ball, alpha] = figure_setup();
 
-    ylim([0 1])
-    xlim([0 1])
-%} 
-    
+xl = bgWidth;    % absolute x limit
+yl = bgHeight;   % absolute y limit
+
+%xl = 100;
+%yl = 100;
+
+x = [0;0];       % initializing player 1 x position and velocity
+y = [0;0];       % initializing player 1 x position and velocity
+
+xp2 = [0;0];     % initializing player 2 x position and velocity
+
+dt = 0.02;       % time step
+
+screenx = 0.25;  % initial x position 
+screeny = 0.1;  % initial y position 
 
 
-    [ball,~,alpha] = imread('Ball.png');
-    ball = flipud(ball);
-    alpha = flipud(alpha);
-    
-    %{
-    [marshmellow,~,alpham] = imread('marshmallow.png');
-     marshmellow = flipud(marshmellow);
-    alpham = flipud(alpham);
-scale = 0.04;
+%% Initializing Images
+HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
+DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
 
-    %}
+H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpham);
 
-%[b_img, a_img, ~] = size(ball);
- 
+K = image(ball,'XData',[screenx-scale+0.07 screenx+scale+0.07], 'YData',[screeny-scale+0.12 screeny+scale+0.12], 'AlphaData',alpha); 
+
+W = image(ball,'XData',[screenx-scale+0.04 screenx+scale+0.04], 'YData',[screeny-scale+0.12 screeny+scale+0.12], 'AlphaData',alpha); 
+
+H2 = image(marshmellow,'XData',[screenx-scale+0.5 screenx+scale+0.5], 'YData',[0.1-scale+0.1 0.1+scale+0.1], 'AlphaData',alpham);
 
 
-[mx, my, ~] = size(marshmellow);
-
-x = [0;0];
-y = [0;0];
-dt = 0.02;
-screenx = 0.25;
-screeny = 0.5;
-
-xp2 = [0;0];
-%u2x = 0;
-
-
-HB = image(Health_Bar, ...
-    'XData',[hb_left, hb_left + hb_width], ...
-    'YData',[hb_top - hb_height, hb_top], ...
-    'AlphaData', alphahb);
-
-DHB = image(Black_HB, ...
-    'XData',[dhb_left, dhb_left + dhb_width], ...
-    'YData',[dhb_top - hb_height, dhb_top], ...
-    'AlphaData', alphadhb);
-
-
-
-H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+10/yl screeny+scale+10/yl], 'AlphaData',alpham);
-%Q = image(ball,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+15/yl screeny+scale+15/yl], 'AlphaData',alpha); 
-K = image(ball,'XData',[screenx-scale+7/xl screenx+scale+7/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
-W = image(ball,'XData',[screenx-scale+4/xl screenx+scale+4/xl], 'YData',[screeny-scale+12/yl screeny+scale+12/yl], 'AlphaData',alpha); 
-
-H2 = image(marshmellow,'XData',[screenx-scale+100/(xl*2) screenx+scale+100/(2*xl)], 'YData',[0-scale+10/(yl*2) 0+scale+10/(2*yl)], 'AlphaData',alpham);
-% ----- Debug Text -----
-%{
-forceText = text(0.1,0.9,'Force: 0 N','FontSize',12,'Color','w');
-dragText  = text(0.1,0.85,'Drag: 0 N','FontSize',12,'Color','w');
-velText   = text(0.1,0.8,'Velocity: 0','FontSize',12,'Color','w');
-healthText   = text(0.1,0.75,'Health: 0','FontSize',12,'Color','w');
-%}
+%% Initial Values
 
 health = 100;
 heart = 0;
 T = 100;
 
-%xp2 = screenx + 100/(2*xl);
-y2 = 0+10/(2*yl);
+y2 = 0.1;
+
+
 %% ---------------- MAIN LOOP ----------------
 while ishandle(H)
  
@@ -147,17 +97,10 @@ while ishandle(H)
                 if btn2 == 0
                         
                   
-                    uy = 1000;
+                    uy = 100;
                     
-                   j=j+1;
-
-                   if j>30
-                      uy = -100;
-                      
-                   end  
                 else
                     uy = 0;  % Reset applied force if within deadband
-                    j =0;
                 end
 
                 if raw < 10
@@ -189,7 +132,7 @@ while ishandle(H)
 
                 if  P2rightBtn == 1
                 if P2leftBtn == 0
-                    u2x = -100;
+                    u2x = -200;
                 else 
                     u2x =0;
                 end
@@ -198,7 +141,7 @@ while ishandle(H)
                 
                 if P2leftBtn == 1
                 if P2rightBtn == 0
-                    u2x = 100;
+                    u2x = 200;
                 else 
                     u2x =0;
                 end 
@@ -223,28 +166,30 @@ while ishandle(H)
     xp2 = RK4x2(xp2, dt, h, u2x);
 
     % ----- Boundary Limits -----
-    if y(1) > 0
+   
+    if y(1) > 1
 
+        y(1) = 1;
+        y(2) = 0;
+    elseif y(1) < 0
         y(1) = 0;
         y(2) = 0;
-    elseif y(1) < -yl
-        y(1) = -yl;
-        y(2) = 0;
     end
+   
    
     if x(1) > xl
         x(1) = xl;
         x(2) = 0;
-    elseif x(1) < -xl
-        x(1) = - xl;
+    elseif x(1) < 0
+        x(1) = 0;
         x(2) = 0;
     end
 
      if xp2(1) > xl
         xp2(1) = xl;
         xp2(2) = 0;
-    elseif xp2(1) < -xl
-        xp2(1) = - xl;
+    elseif xp2(1) < 0
+        xp2(1) = 0;
         xp2(2) = 0;
     end
    
@@ -257,11 +202,13 @@ while ishandle(H)
         s=1;
 
     end
- 
-    x1 = (x(1)+xl)/(2*xl);
-    y1 = (y(1)+yl)/(2*yl);
+   
+   
+    x1 = x(1);
+    y1 = y(1);
 
-    x2 = (xp2(1)+xl)/(2*xl);
+    x2 =xp2(1);
+   
 
     if x1 > x2
 
@@ -279,7 +226,7 @@ while ishandle(H)
 
         if back == 1
                 
-            if (x1 + 30/(2*xl)) > x2
+            if (x1 + 0.15) > x2
 
                 if x1  < x2
 
@@ -302,7 +249,7 @@ while ishandle(H)
 
         if back ==-1
 
-            if (x1 - 30/(2*xl)) < x2
+            if (x1 - 30.15) < x2
 
                 if x1  > x2
 
@@ -333,49 +280,32 @@ while ishandle(H)
     blackw = 1.000001 - health/100;
     dhb_width  = 0.18*blackw;
 
-    % ----- Update Ball -----
-    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+10/(2*yl) y1+scale+10/(2*yl)]);
-    %set(Q,'XData',[x1-scale x1+scale],'YData',[y1-scale+15/(2*yl)+5*c/(2*yl) y1+scale+15/(2*yl)+5*c/(2*yl)]);
-    set(K,'XData',[x1-scale+5*back/(2*xl)+7*b*back/(2*xl) x1+scale+5*back/(xl*2)+7*back*b/(2*xl)], 'YData',[y1-scale+(15+7*up*b)/(2*yl) y1+scale+(15+7*up*b)/(2*yl)], 'AlphaData',alpha); 
-    set(W,'XData',[x1-scale*s+4/(2*xl) x1+scale*s+4/(2*xl)], 'YData',[y1-scale*s+12/(2*yl) y1+scale*s+12/(2*yl)], 'AlphaData',T); 
+    %% ----- Update Ball -----
+    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
+   
+    set(K,'XData',[x1-scale+0.05*back+0.07*b*back x1+scale+0.05*back+0.07*back*b], 'YData',[y1-scale+(0.15+0.07*up*b) y1+scale+(0.15+0.07*up*b)], 'AlphaData',alpha); 
+    set(W,'XData',[x1-scale*s+0.04 x1+scale*s+0.04], 'YData',[y1-scale*s+0.12 y1+scale*s+0.12], 'AlphaData',T); 
 
     set(H2,'XData',[x2-scale x2+scale], 'YData',[y2-scale y2+scale], 'AlphaData',alpham); 
 
-    set(DHB, 'XData',[dhb_left dhb_left+dhb_width], ...
-    'YData',[hb_top - hb_height hb_top], ...
-    'AlphaData', alphadhb);
-
-
-% ----- Debug Text -----
-  %{
-    set(forceText,'String',sprintf('Force: %.2f N',abs(uy)+abs(ux)));
-    set(dragText,'String',sprintf('Drag: %.2f N',F_drag+F_dragx));
-    set(velText,'String',sprintf('Velocity: %.2f',sqrt(((y(2))^2)+((x(2))^2))));
-    set(healthText,'String',sprintf('Health: %.2f',health));
-  %}    
-
-%{  
-    if x1 > x2
-
-       marshmellow = fliplr(marshmellow);
-       alpha = fliplr(alpham);
-
-    end    
-  %}
-
+    set(DHB, 'XData',[dhb_left dhb_left+dhb_width], 'YData',[hb_top - hb_height hb_top], 'AlphaData', alphadhb);
 
     drawnow limitrate
 
     if health <= 0
         
-        break
-
+        
+        close all % close figure window once guy is super toasted
+         
+        
+        
     end
 
 end
      
 clear arduinoObj
- 
+
+
 %% ============================================================
 % RK4 FUNCTION
 % ============================================================
@@ -426,7 +356,7 @@ end
  
 function dxdt = f(y, h, uy)
  
-    global m rho Cd A  F_drag g 
+    global m rho Cd A  F_drag g eq
  
     dxdt = zeros(2,1);
  
@@ -436,45 +366,45 @@ function dxdt = f(y, h, uy)
     F_drag = 0.5 * rho * Cd * A * v * abs(v) * h;
  
     dxdt(1) = v;
-    dxdt(2) = (uy - F_drag - g*m) / m;
+    dxdt(2) = ((uy - F_drag - g*m)*eq) / m; 
 end
  
 function dxdtx = fx(x, h, ux)
  
-    global m rho Cd A F_dragx
+    global m rho Cd A F_dragx eq
  
     dxdtx = zeros(2,1);
  
-    vx = x(2);
+    vx = x(2)*ux/(abs(ux)+eq);
  
     % Quadratic drag
     F_dragx = 0.5 * rho * Cd * A * vx * abs(vx) * h;
 
 
     dxdtx(1) = vx;
-    dxdtx(2) = (ux - F_dragx) / m; % + mom
+    dxdtx(2) = ((ux - F_dragx)*eq) / m; % + mom
 end
 function dxdtx2 = fx2(xp2, h, u2x)
  
-    global m rho Cd A F_dragx2
+    global m rho Cd A F_dragx2 eq
  
     dxdtx2 = zeros(2,1);
  
-    vx2 = xp2(2);
+    vx2 = xp2(2)*u2x/(abs(u2x)+eq);
  
     % Quadratic drag
     F_dragx2 = 0.5 * rho * Cd * A * vx2 * abs(vx2) * h;
 
 
     dxdtx2(1) = vx2;
-    dxdtx2(2) = (u2x - F_dragx2) / m; % + mom
+    dxdtx2(2) = ((u2x - F_dragx2)*eq) / m; % + mom
 end
 %% ============================================================
 % FIGURE SETUP FUNCTION
 % ============================================================
  
 function [bgWidth,bgHeight,bg, marshmellow, alpham, scale,Health_Bar,alphahb,Black_HB,alphadhb,...
-    hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup()
+    hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ball, alpha] = figure_setup()
 
 
  
@@ -516,14 +446,13 @@ ylim([0 bgHeight])
 marshmellow = flipud(marshmellow);
 alpham = flipud(alpham);
 
+ [ball,~,alpha] = imread('Ball.png');
+    ball = flipud(ball);
+    alpha = flipud(alpha);
+
 % Object scale (normalized)
 scale = 90/imgW;
  
-  %  [ball_image,~,alpha] = imread('circle_black_transparent.png');
-    
-   
-  %  ball_image = flipud(ball_image);
-  %  alpha = flipud(alpha);
     
   [Health_Bar,~,alphahb] = imread('Health_Bar.png');
     Health_Bar = flipud(Health_Bar);
