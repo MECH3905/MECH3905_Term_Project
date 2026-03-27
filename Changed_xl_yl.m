@@ -18,7 +18,7 @@ F_dragx = 0;     % player 1 x-component initial drag force
 F_dragx2 = 0;    % player 2 x-component initial drag force
 F_drag2 = 0;     % player 2 y-component initial drag force
 
-eq = 0.000001;      % the Equalizer, makes everything very small to try and fit into 0-1
+eq = 0.0001;      % the Equalizer, makes everything very small to try and fit into 0-1
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
@@ -131,8 +131,10 @@ while ishandle(run)
                     ux = (rawx - 512);
                 end
  
-                
-                btn1 = num(7);
+                if ux == 0
+                x(2) = 0;
+                end
+                   btn1 = num(7);
 
                 h = 1.0+(100.0-health)*0.01;
 
@@ -386,8 +388,9 @@ function dxdtx = fx(x, h, ux)
  
     dxdtx = zeros(2,1);
  
-    vx = x(2)*ux/(abs(ux)+eq);
- 
+    
+    vx = x(2); 
+    
     % Quadratic drag
     F_dragx = 0.5 * rho * Cd * A * vx * abs(vx) * h;
 
