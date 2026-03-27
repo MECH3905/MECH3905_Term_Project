@@ -471,7 +471,7 @@ m_upward_jab = flipud(m_upward_jab);
 alpha_upward_jab = flipud(alpha_upward_jab);
 
 % Object scale (normalized)
-scale = 90/imgW;
+scale = 200/imgW;
  
     
   [Health_Bar,~,alphahb] = imread('Health_Bar.png');
