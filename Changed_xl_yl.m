@@ -28,8 +28,11 @@ flush(arduinoObj);
 
 
 %% ---------------- FIGURE SETUP ----------------
-[bgWidth,bgHeight,bg, marshmellow, alpham, scale,Health_Bar,alphahb,Black_HB,...
-    alphadhb,hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ball, alpha] = figure_setup();
+[bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
+ m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+ m_upward_jab, alpha_upward_jab, ...
+ scale,Health_Bar,alphahb,Black_HB,alphadhb,...
+ hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup();
 
 xl = bgWidth;    % absolute x limit
 yl = bgHeight;   % absolute y limit
@@ -52,14 +55,15 @@ screeny = 0.1;  % initial y position
 HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
 DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
 
-H = image(marshmellow,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpham);
+run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
 
-K = image(ball,'XData',[screenx-scale+0.07 screenx+scale+0.07], 'YData',[screeny-scale+0.12 screeny+scale+0.12], 'AlphaData',alpha); 
+crouch = image(m_crouch,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_crouch);
 
-W = image(ball,'XData',[screenx-scale+0.04 screenx+scale+0.04], 'YData',[screeny-scale+0.12 screeny+scale+0.12], 'AlphaData',alpha); 
+jab = image(m_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jab);
 
-H2 = image(marshmellow,'XData',[screenx-scale+0.5 screenx+scale+0.5], 'YData',[0.1-scale+0.1 0.1+scale+0.1], 'AlphaData',alpham);
+jump = image(m_jump,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jump);
 
+upward_jab = image(m_upward_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_upward_jab);
 
 %% Initial Values
 
@@ -69,9 +73,10 @@ T = 100;
 
 y2 = 0.1;
 
+jab_timer = 0;
 
 %% ---------------- MAIN LOOP ----------------
-while ishandle(H)
+while ishandle(run)
  
  
     % ----- Read Arduino -----
@@ -251,7 +256,9 @@ while ishandle(H)
 
         if back ==-1
 
-            if (x1 - 30.15) < x2
+        jab_timer = 5;   % lasts 5 frames
+
+             if (x1 - 30.15) < x2
 
                 if x1  > x2
 
@@ -283,15 +290,17 @@ while ishandle(H)
     dhb_width  = 0.18*blackw;
 
     %% ----- Update Ball -----
-    set(H,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
-   
-    set(K,'XData',[x1-scale+0.05*back+0.07*b*back x1+scale+0.05*back+0.07*back*b], 'YData',[y1-scale+(0.15+0.07*up*b) y1+scale+(0.15+0.07*up*b)], 'AlphaData',alpha); 
-    set(W,'XData',[x1-scale*s+0.04 x1+scale*s+0.04], 'YData',[y1-scale*s+0.12 y1+scale*s+0.12], 'AlphaData',T); 
-
-    set(H2,'XData',[x2-scale x2+scale], 'YData',[y2-scale y2+scale], 'AlphaData',alpham); 
+    set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
 
     set(DHB, 'XData',[dhb_left dhb_left+dhb_width], 'YData',[hb_top - hb_height hb_top], 'AlphaData', alphadhb);
 
+
+    if jab_timer > 0
+    set(run,'CData', m_jab, 'AlphaData', alpha_jab);
+    jab_timer = jab_timer - 1;
+    else
+    set(run,'CData', m_run, 'AlphaData', alpha_run);
+    end
     drawnow limitrate
 
     if health <= 0
@@ -404,10 +413,11 @@ end
 %% ============================================================
 % FIGURE SETUP FUNCTION
 % ============================================================
- 
-function [bgWidth,bgHeight,bg, marshmellow, alpham, scale,Health_Bar,alphahb,Black_HB,alphadhb,...
-    hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ball, alpha] = figure_setup()
-
+function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab, ...
+          scale,Health_Bar,alphahb,Black_HB,alphadhb,...
+          hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup()
 
  
     % Create fullscreen figure
@@ -419,10 +429,6 @@ bg = flipud(bg); % flip img
 [imgH,imgW,~] = size(bg);  % read size
 imgRatio = imgW/imgH; % get img ratio
  
-  % Get screen ratio
-screen = get(0,'ScreenSize'); 
-screenRatio = screen(3)/screen(4);
-
 axH = 1; % max y
 axW = imgRatio; % img x size
 axX = (1-axW)/2; % img location 
@@ -444,13 +450,25 @@ xlim([0 bgWidth])
 ylim([0 bgHeight])
    
     % Load Player Images
-[marshmellow,~,alpham] = imread('marshmallow.png');
-marshmellow = flipud(marshmellow);
-alpham = flipud(alpham);
+[m_run,~,alpha_run] = imread('m_run.png');
+m_run = flipud(m_run);
+alpha_run = flipud(alpha_run);
 
- [ball,~,alpha] = imread('Ball.png');
-    ball = flipud(ball);
-    alpha = flipud(alpha);
+[m_jump,~,alpha_jump] = imread('m_jump.png');
+m_jump = flipud(m_jump);
+alpha_jump = flipud(alpha_jump);
+
+[m_crouch,~,alpha_crouch] = imread('m_crouch.png');
+m_crouch = flipud(m_crouch);
+alpha_crouch = flipud(alpha_crouch);
+
+[m_jab,~,alpha_jab] = imread('m_jab.png');
+m_jab = flipud(m_jab);
+alpha_jab = flipud(alpha_jab);
+
+[m_upward_jab,~,alpha_upward_jab] = imread('m_upward_jab.png');
+m_upward_jab = flipud(m_upward_jab);
+alpha_upward_jab = flipud(alpha_upward_jab);
 
 % Object scale (normalized)
 scale = 90/imgW;
