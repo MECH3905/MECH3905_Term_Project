@@ -59,7 +59,7 @@ DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top
 
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
 
-p2run = image(m_runflip,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
+p2run = image(m_runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
 %% Initial Values
 
@@ -142,7 +142,7 @@ while ishandle(run)
                 end 
                 
  
-                if ux == 0 && p1jabbtn ~= 0
+                if ux == 0 %&& p1jabbtn ~= 0
                     x(2) = 0;
                 
                 end
@@ -215,13 +215,13 @@ while ishandle(run)
    
     %% replacing plyer images  
     
-    player1image = changeimage(x1, x2, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+    player1image = changeimage(ux, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab);
     set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-    player2image = changeimage(x2, x1, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+    player2image = changeimage(x2, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab);
@@ -229,10 +229,10 @@ while ishandle(run)
   
     %% Player hit and damage function
     if p1jabbtn == 0 % make punch crouch and jump into functions add dash
-
+        x(2) = 0;
         hit = jabfunction(x1, y1, x2, y2, up);
         
-        heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
+        heart =  (0.0025 + (sqrt(ux^2 + uy^2))*0.00000001)*crouch;
         health = health - heart*hit;
 
     end  
@@ -311,7 +311,7 @@ end
  
 function dxdt = f(y, h, uy)
  
-    global m rho Cd A  F_drag g eq
+    global m rho Cd A  F_drag g 
  
     dxdt = zeros(2,1);
  
@@ -321,7 +321,7 @@ function dxdt = f(y, h, uy)
     F_drag = 0.5 * rho * Cd * A * v * abs(v) * h;
  
     dxdt(1) = v;
-    dxdt(2) = (uy - F_drag - g*m)*eq / m; 
+    dxdt(2) = (uy - F_drag - g*m) / m; 
 end
  
 function dxdtx = fx(x, h, ux)
@@ -338,7 +338,7 @@ function dxdtx = fx(x, h, ux)
 
 
     dxdtx(1) = vx;
-    dxdtx(2) = (ux - F_dragx)*eq / m;
+    dxdtx(2) = (ux*eq - F_dragx) / m;
 end
 function dxdtx2 = fx2(xp2, h, u2x)
  
@@ -353,7 +353,7 @@ function dxdtx2 = fx2(xp2, h, u2x)
 
 
     dxdtx2(1) = vx2;
-    dxdtx2(2) = (u2x - F_dragx2)*eq / m;
+    dxdtx2(2) = (u2x*eq - F_dragx2) / m;
 end
 %% ============================================================
 % FIGURE SETUP FUNCTION
@@ -486,14 +486,15 @@ function jab = jabfunction(x1, y1, x2, y2, up)
 
 end
 
-function image = changeimage(x1, x2,up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+function image = changeimage(x1, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab)
+
     image{1} = m_run;
     image{2}= alpha_run;
 
- if x1 > x2
+ if x1 < 0
     image{1} = m_runflip;
     image{2}= alpha_runflip;   
 
@@ -522,7 +523,7 @@ function image = changeimage(x1, x2,up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runf
     end
 end
     
-if x1 < x2 
+if x1 >= 0 
        image{1} = m_run;
        image{2}= alpha_run;
 
