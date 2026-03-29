@@ -66,6 +66,7 @@ upward_jab = image(m_upward_jab,'XData',[screenx-scale screenx+scale], 'YData',[
 %}
 p2run = image(m_runflip,'XData',[screenx+0.25-scale screenx+0.25+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
+
 %% Initial Values
 
 health = 100;
@@ -175,46 +176,33 @@ while ishandle(run)
     if x(1) > xl
         x(1) = xl;
         x(2) = 0;
-    elseif x(1) < 0
-        x(1) = 0;
+    elseif x(1) < -xl
+        x(1) = -xl;
         x(2) = 0;
     end
 
      if xp2(1) > xl
         xp2(1) = xl;
         xp2(2) = 0;
-    elseif xp2(1) < 0
-        xp2(1) = 0;
+    elseif xp2(1) < -xl
+        xp2(1) = -xl;
         xp2(2) = 0;
      end
    
-     %% 0-1 or 0-1.778
-    x1 = (x(1)/xl)*bgWidth;
+      %% y = screeeny-1 && x = 0-1.778
+     
+    x1 = ((x(1)+xl)/(2*xl))*bgWidth;
     y1 = (y(1)/yl)*bgHeight;
 
-    x2 =(xp2(1)/xl)*bgWidth;
-   
-     %% setting 0 - 1 & 0- 1.778 
     if y1 > bgHeight
 
         y1 = bgHeight;
     elseif y1 < screeny
         y1 = screeny;
     end
+
+    x2 =((xp2(1)+xl)/(2*xl))*bgWidth;
    
-    if x1 > bgWidth
-        x1 = bgWidth;
-    elseif x1 < 0
-        x1 = 0;
-    end
-
-     if x2 > bgWidth
-        x2 = bgWidth;
-
-    elseif x2 < 0
-        x2 =0;
-     end
-
     %% replacing plyer images 
   if x1 > x2
     set(run,'CData', m_runflip, 'AlphaData', alpha_runflip);
