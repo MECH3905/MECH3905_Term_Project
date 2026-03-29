@@ -58,9 +58,8 @@ screeny = 0.1;  % initial y position
 HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
 DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
 
-burntrun = image(burnt_m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_burnt_run);
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
-
+burntrun = image(burnt_m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_burnt_run);
 
 p2run = image(m_runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
@@ -225,9 +224,8 @@ while ishandle(run)
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run);
-
-    set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
     set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
+    set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
 
     player2image = changeimage(x2, up,  burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
@@ -240,10 +238,10 @@ while ishandle(run)
         x(2) = 0;
         hit = jabfunction(x1, y1, x2, y2, up);
         
-        heart =  (0.25 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
+        heart =  (0.0025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
         health = health - heart*hit;
 
-        burnt = 0.25 + health/133.33;
+        burnt = 0.5 + health/200;
 
     end  
     
@@ -252,9 +250,8 @@ while ishandle(run)
     dhb_width  = 0.18*blackw;
 
     %% ----- Update Ball -----
-    set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1],'AlphaData',player1image{4});
-    set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1],'AlphaData',player1image{2}); 
-    
+    set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1], ); 
+    set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
 
     set(DHB, 'XData',[dhb_left dhb_left+dhb_width], 'YData',[hb_top - hb_height hb_top], 'AlphaData', alphadhb);
 
@@ -419,7 +416,7 @@ alpha_run = flipud(alpha_run);
 m_runflip = rot90(m_runflip,2);
 alpha_runflip = rot90(alpha_runflip,2);
 
-[burnt_m_run,~,alpha_burnt_run] = imread('burnt_m_run.png');
+[burnt_m_run,~,alpha_burnt_run] = imread('m_run.png');
 burnt_m_run = flipud(burnt_m_run);
 alpha_burnt_run = flipud(alpha_burnt_run);
 
@@ -506,7 +503,7 @@ end
 function image = changeimage(x1, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
-          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run)
+          m_upward_jab, alpha_upward_jab, burnt_m_run,alpha_burnt_run)
 
     image{1} = m_run;
     image{2}= alpha_run*burnt;
@@ -545,7 +542,8 @@ end
 if x1 >= 0 
        image{1} = m_run;
        image{2}= alpha_run*burnt;
-       
+       image{3} = burnt_m_run;
+       image{3}= alpha_burnt_run;
 
     if p1crouchbtn == 0 
         image{1} = m_crouch;
