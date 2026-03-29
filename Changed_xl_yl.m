@@ -22,7 +22,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
-pause(2)
+pause(5)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
 
@@ -44,9 +44,12 @@ y = [0;0];       % initializing player 1 x position and velocity
 
 xp2 = [0;0];     % initializing player 2 x position and velocity
 
+player1image = {0,0};
+player2image = {0,0};
+
 dt = 0.02;       % time step
 
-screenx = 0.5;  % initial x position 
+screenx = 0.25;  % initial x position 
 screeny = 0.1;  % initial y position 
 
 
@@ -54,18 +57,9 @@ screeny = 0.1;  % initial y position
 HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
 DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
 
-run = image(m_run,'XData',[screenx-0.25-scale screenx-0.25+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
-%{
-crouch = image(m_crouch,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_crouch);
+run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
 
-jab = image(m_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jab);
-
-jump = image(m_jump,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jump);
-
-upward_jab = image(m_upward_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_upward_jab);
-%}
-p2run = image(m_runflip,'XData',[screenx+0.25-scale screenx+0.25+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
-
+p2run = image(m_runflip,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
 %% Initial Values
 
@@ -95,7 +89,10 @@ while ishandle(run)
                 raw = num(2);
                 rawx = num(3);
                 p1jumpbtn = num(4);
+                p1dashbtn = num(5);
+                p1crouchbtn = num(6);
                 p1jabbtn = num(7);
+
 
                 P2leftBtn = num(8);
                 P2rightBtn = num(9);
@@ -105,6 +102,7 @@ while ishandle(run)
                         
                   
                     up = 0;
+                
                 else 
                     up = 1;
                 end  
@@ -112,25 +110,37 @@ while ishandle(run)
                 if p1jumpbtn == 0
                         
                     uy = 300;
+
+                elseif p1dashbtn == 0
+
+                    uy = 300*(raw-512)/512;
                     
                 else
                     uy = 0;  % Reset applied force if within deadband
                 end
 
-                if raw < 10
+                if p1crouchbtn == 0
 
                     crouch = 0;
                     
                 else 
                     crouch = 1;
-                end    
+                end 
+                
  
                 % Deadband
                 if abs(rawx - 512) < 10
                     ux = 0;
-                else
+
+                elseif p1dashbtn == 0
+
+                    ux = 3000*(rawx-512)/512;
+                    
+                else 
                     ux = (rawx - 512);
-                end
+                    
+                end 
+                
  
                 if ux == 0 && p1jabbtn ~= 0
                     x(2) = 0;
@@ -162,7 +172,7 @@ while ishandle(run)
     x = RK4x(x, dt, h, ux);
     xp2 = RK4x2(xp2, dt, h, u2x);
 
-    % ----- +0 Boundary Limits -----
+    % ----- Absolute Boundary Limits -----
    
     if y(1) > yl
 
@@ -189,8 +199,8 @@ while ishandle(run)
         xp2(2) = 0;
      end
    
-      %% y = screeeny-1 && x = 0-1.778
-     
+     %% y = screeeny-1 && x = 0-1.778
+
     x1 = ((x(1)+xl)/(2*xl))*bgWidth;
     y1 = (y(1)/yl)*bgHeight;
 
@@ -203,39 +213,21 @@ while ishandle(run)
 
     x2 =((xp2(1)+xl)/(2*xl))*bgWidth;
    
-    %% replacing plyer images 
-  if x1 > x2
-    set(run,'CData', m_runflip, 'AlphaData', alpha_runflip);
-    set(p2run,'CData', m_run, 'AlphaData', alpha_run);
+    %% replacing plyer images  
+    
+    player1image = changeimage(x1, x2, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab);
+    set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-    if p1jabbtn == 0 
-        if up == 0
-            set(run,'CData', m_upward_jabflip, 'AlphaData', alpha_upward_jabflip);
-        else
-            set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
-        end
-        
-    elseif p1jumpbtn == 0
-        set(run,'CData', m_jumpflip, 'AlphaData', alpha_jumpflip);
-    end
-  end
-    
-   if x1 < x2 
-       set(run,'CData', m_run, 'AlphaData', alpha_run);
-       set(p2run,'CData', m_runflip, 'AlphaData', alpha_runflip);
-    if p1jabbtn == 0 
-        if up == 0
-            set(run,'CData', m_upward_jab, 'AlphaData', alpha_upward_jab);
-        else
-            set(run,'CData', m_jab, 'AlphaData', alpha_jab);
-        end
-    elseif p1jumpbtn == 0
-        set(run,'CData', m_jump, 'AlphaData', alpha_jump);
-    
-    end
-  end
-   
+    player2image = changeimage(x2, x1, up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab);
+    set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
   
+    %% Player hit and damage function
     if p1jabbtn == 0 % make punch crouch and jump into functions add dash
 
         hit = jabfunction(x1, y1, x2, y2, up);
@@ -451,8 +443,8 @@ scale = 200/imgW;
  
     
   [Health_Bar,~,alphahb] = imread('Health_Bar.png');
-    Health_Bar = flipud(Health_Bar);
-    Health_Bar = fliplr(Health_Bar);
+    Health_Bar = rot90(Health_Bar,2);
+    
 
     alphahb = flipud(alphahb);
 
@@ -491,5 +483,72 @@ function jab = jabfunction(x1, y1, x2, y2, up)
     end
 
     jab = hit;
+
+end
+
+function image = changeimage(x1, x2,up, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab)
+    image{1} = m_run;
+    image{2}= alpha_run;
+
+ if x1 > x2
+    image{1} = m_runflip;
+    image{2}= alpha_runflip;   
+
+    if p1crouchbtn == 0 
+        image{1} = m_crouchflip;
+        image{2}= alpha_crouchflip;
+        
+    end
+
+    if p1jabbtn == 0 
+        if up == 0
+            image{1} = m_upward_jabflip;
+            image{2}= alpha_upward_jabflip;
+            
+        else
+            image{1} = m_jabflip;
+            image{2}= alpha_jabflip;
+            
+        end
+    end
+
+    if p1jumpbtn == 0
+        image{1} = m_jumpflip;
+        image{2}= alpha_jumpflip;
+        
+    end
+end
+    
+if x1 < x2 
+       image{1} = m_run;
+       image{2}= alpha_run;
+
+    if p1crouchbtn == 0 
+        image{1} = m_crouch;
+        image{2}= alpha_crouch;
+        
+    end
+
+    if p1jabbtn == 0 
+        if up == 0
+            image{1} = m_upward_jab;
+            image{2}= alpha_upward_jab;
+            
+        else
+            image{1} = m_jab;
+            image{2}= alpha_jab;
+            
+        end
+    end   
+    
+    if p1jumpbtn == 0
+        image{1} = m_jump;
+        image{2}= alpha_jump;
+    end
+    
+end
 
 end

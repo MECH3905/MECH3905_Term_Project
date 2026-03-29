@@ -42,6 +42,8 @@ long counter = 0;
 int i = 0;
 int k = 0;
 int l = 0;
+int d = 0;
+int c = 0;
 
 
 void setup() {
@@ -62,23 +64,7 @@ void loop() {
 
   // JUMP BUTTON
   int jumpReading = digitalRead(jumpPin);
-/*
-  if (jumpReading != lastJumpReading) {
-    lastDebounceTimeJump = millis();
-  }
 
-  if ((millis() - lastDebounceTimeJump) > debounceDelay) {
-    if (jumpReading != stableJumpState) {
-      stableJumpState = jumpReading;
-
-      if (stableJumpState == LOW) { 
-        jumpBtn = 0; 
-      }
-    }
-  }
-
-  lastJumpReading = jumpReading;
-*/
 
  if (i>20){
     if (jumpReading == 0){
@@ -100,97 +86,27 @@ void loop() {
   // DASH BUTTOn 
   int dashReading = digitalRead(dashPin);
 
-  if (dashReading != lastDashReading) {
-    lastDebounceTimeDash = millis();
-  }
-
-  if ((millis() - lastDebounceTimeDash) > debounceDelay) {
-    if (dashReading != stableDashState) {
-      stableDashState = dashReading;
-
-      if (stableDashState == LOW) {
-        dashBtn = 0;
-      }
-    }
-  }
-
-  lastDashReading = dashReading;
-
-  // JAB BUTTON
-  bool jabReading = digitalRead(jabPin);
-
-  /*
-  if (jabReading != lastJabReading) {
-    lastDebounceTimeJab = millis();
-  }
-
-  if ((millis() - lastDebounceTimeJab) > debounceDelay) {
-    //if (jabReading != stableJabState) {
-      //stableJabState = jabReading;
-
-      if (jabReading == 0) {
-        if(i<= 5){
-        jabBtn = 0;
-        i++;
-        }
-        else{
-        
-        if(k<=5){
-            jabBtn = 1;
-            k++;
-            i =1;
+  if (d>20){
+    if (dashReading == 0){
+        if(c<30){
+          dashBtn = 0;
+          c++;
+          
         }
         
-        k = 1;
-      }
-      
-      }
-      
-    //}
-    
-  }
-  
-  lastJabReading = jabReading;
-  */
- /*
- if (i<=5){
-    if (jabReading == 0){
-        if(k<=5){
-          jabBtn = 0;
-          k++;
-          i=1;
-        }
-
-    }
-    else{
-      i++;
-      jabBtn = 1;
-      k = 1;
+    }else{
+      d=0;
+      dashBtn = 1;
+      c = 0;
     }
  }
 
- i = 1;
- */
- /*
-  if (jabReading == 0){
-    if (i>=50){
-      if(k<=5){
-          jabBtn = 0;
-          k++;
-          i=1;
-        }
+ d++;
+  // JAB BUTTON
+  bool jabReading = digitalRead(jabPin);
 
-  }else{
-    jabBtn = 1;
-    k = 1;
-    i++;
-  }
-  }else{
-    k=1;
-    i++;
-  }
-*/
- // if (i>20){
+  
+
     if (jabReading == 0){
         if(k<20){
           jabBtn = 0;
@@ -203,9 +119,7 @@ void loop() {
       jabBtn = 1;
       k = 0;
     }
- //}
 
- //i++;
 
 
 
