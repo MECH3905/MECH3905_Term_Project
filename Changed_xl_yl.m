@@ -33,7 +33,8 @@ flush(arduinoObj);
  m_upward_jab, alpha_upward_jab, ...
  scale,Health_Bar,alphahb,Black_HB,alphadhb,...
  hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ...
- m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,alpha_crouchflip, m_jabflip,alpha_jabflip] = figure_setup();
+ m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,...
+ alpha_crouchflip,m_jabflip,alpha_jabflip,m_upward_jabflip,alpha_upward_jabflip] = figure_setup();
 
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
@@ -45,7 +46,7 @@ xp2 = [0;0];     % initializing player 2 x position and velocity
 
 dt = 0.02;       % time step
 
-screenx = 0.25;  % initial x position 
+screenx = 0.5;  % initial x position 
 screeny = 0.1;  % initial y position 
 
 
@@ -53,8 +54,8 @@ screeny = 0.1;  % initial y position
 HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
 DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
 
-run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
-
+run = image(m_run,'XData',[screenx-0.25-scale screenx-0.25+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
+%{
 crouch = image(m_crouch,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_crouch);
 
 jab = image(m_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jab);
@@ -62,8 +63,8 @@ jab = image(m_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+
 jump = image(m_jump,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_jump);
 
 upward_jab = image(m_upward_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_upward_jab);
-
-p2run = image(m_runflip,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
+%}
+p2run = image(m_runflip,'XData',[screenx+0.25-scale screenx+0.25+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
 %% Initial Values
 
@@ -91,14 +92,20 @@ while ishandle(run)
            end
 
                 raw = num(2);
+                rawx = num(3);
                 p1jumpbtn = num(4);
+                p1jabbtn = num(7);
+
+                P2leftBtn = num(8);
+                P2rightBtn = num(9);
+
                 % Deadband
                 if (raw - 512) > 300
                         
                   
-                    up = 1;
-                else 
                     up = 0;
+                else 
+                    up = 1;
                 end  
 
                 if p1jumpbtn == 0
@@ -112,14 +119,10 @@ while ishandle(run)
                 if raw < 10
 
                     crouch = 0;
+                    
                 else 
                     crouch = 1;
                 end    
- 
-             
-              
-                    
-                rawx = num(3);
  
                 % Deadband
                 if abs(rawx - 512) < 10
@@ -132,14 +135,8 @@ while ishandle(run)
                     x(2) = 0;
                 
                 end
-                   p1jabbtn = num(7);
 
-                h = 1.0+(100.0-health)*0.01;
-
-                P2leftBtn = num(8);
-               P2rightBtn = num(9);
-
-
+   
               if P2rightBtn == 1 && P2leftBtn == 0
 
                   u2x = -200;
@@ -153,6 +150,8 @@ while ishandle(run)
                   u2x = 0;
 
               end
+
+              h = 1.0+(100.0-health)*0.01;
     end
         
    
@@ -222,7 +221,12 @@ while ishandle(run)
     set(p2run,'CData', m_run, 'AlphaData', alpha_run);
 
     if p1jabbtn == 0 
-        set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
+        if up == 0
+            set(run,'CData', m_upward_jabflip, 'AlphaData', alpha_upward_jabflip);
+        else
+            set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
+        end
+        
     elseif p1jumpbtn == 0
         set(run,'CData', m_jumpflip, 'AlphaData', alpha_jumpflip);
     end
@@ -232,16 +236,21 @@ while ishandle(run)
        set(run,'CData', m_run, 'AlphaData', alpha_run);
        set(p2run,'CData', m_runflip, 'AlphaData', alpha_runflip);
     if p1jabbtn == 0 
-    set(run,'CData', m_jab, 'AlphaData', alpha_jab);
+        if up == 0
+            set(run,'CData', m_upward_jab, 'AlphaData', alpha_upward_jab);
+        else
+            set(run,'CData', m_jab, 'AlphaData', alpha_jab);
+        end
     elseif p1jumpbtn == 0
         set(run,'CData', m_jump, 'AlphaData', alpha_jump);
+    
     end
   end
    
   
     if p1jabbtn == 0 % make punch crouch and jump into functions add dash
 
-        hit = jabfunction(x1, y1, x2, y2);
+        hit = jabfunction(x1, y1, x2, y2, up);
         
         heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
         health = health - heart*hit;
@@ -374,7 +383,8 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           m_upward_jab, alpha_upward_jab, ...
           scale,Health_Bar,alphahb,Black_HB,alphadhb,...
           hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
-          m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip, m_jabflip,alpha_jabflip] = figure_setup()
+          m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip] = figure_setup()
 
  
 
@@ -444,6 +454,10 @@ alpha_jabflip = rot90(alpha_jabflip,2);
 m_upward_jab = flipud(m_upward_jab);
 alpha_upward_jab = flipud(alpha_upward_jab);
 
+[m_upward_jabflip,~,alpha_upward_jabflip] = imread('m_upward_jab.png');
+m_upward_jabflip = rot90(m_upward_jabflip,2);
+alpha_upward_jabflip = rot90(alpha_upward_jabflip,2);
+
 % Object scale (normalized)
 scale = 200/imgW;
  
@@ -470,19 +484,19 @@ scale = 200/imgW;
 end
 
 
-function jab = jabfunction(x1, y1, x2, y2)
+function jab = jabfunction(x1, y1, x2, y2, up)
     
     global hitbox
     
 
-    if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox        %if player 1 is to the left of player 2
+    if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2      %if player 1 is to the left of player 2
 
              hit = 1;                                             % 1 means he hit
 
-        elseif x1 > x2 && (x1 - hitbox) < x2 && y1 < y2 +hitbox   %if player 1 is to the right of player 2
+    elseif x1 > x2 && (x1 - hitbox) < x2 && y1 <y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2   %if player 1 is to the right of player 2
 
              hit =  1;
-        else 
+    else 
 
              hit = 0;
 
