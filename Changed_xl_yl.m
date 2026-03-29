@@ -22,7 +22,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
-pause(5)
+pause(2)
 configureTerminator(arduinoObj,"CR/LF");
 flush(arduinoObj);
 
