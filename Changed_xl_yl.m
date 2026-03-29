@@ -1,10 +1,11 @@
 
+
 clear all
 close all
 clc
 
 % Declare global variables 
-global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl  a hitbox
+global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl eq hitbox
  
 % Declare physical constants 
 m   = 10;        % mass (kg)
@@ -16,7 +17,7 @@ F_drag = 0;      % player 1 y-component initial drag force
 F_dragx = 0;     % player 1 x-component initial drag force
 F_dragx2 = 0;    % player 2 x-component initial drag force
 F_drag2 = 0;     % player 2 y-component initial drag force
-a = 0;
+eq = 0.1;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
@@ -215,36 +216,32 @@ while ishandle(run)
         x2 =0;
      end
 
-    %% replacing images 
+    %% replacing plyer images 
   if x1 > x2
     set(run,'CData', m_runflip, 'AlphaData', alpha_runflip);
+    set(p2run,'CData', m_run, 'AlphaData', alpha_run);
+
     if p1jabbtn == 0 
-    set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
+        set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
+    elseif p1jumpbtn == 0
+        set(run,'CData', m_jumpflip, 'AlphaData', alpha_jumpflip);
     end
   end
     
    if x1 < x2 
        set(run,'CData', m_run, 'AlphaData', alpha_run);
+       set(p2run,'CData', m_runflip, 'AlphaData', alpha_runflip);
     if p1jabbtn == 0 
     set(run,'CData', m_jab, 'AlphaData', alpha_jab);
+    elseif p1jumpbtn == 0
+        set(run,'CData', m_jump, 'AlphaData', alpha_jump);
     end
   end
    
   
     if p1jabbtn == 0 % make punch crouch and jump into functions add dash
 
-        if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox        %if player 1 is to the left of player 2
-
-             hit = 1;                                             % 1 means he hit
-
-        elseif x1 > x2 && (x1 - hitbox) < x2 && y1 < y2 +hitbox   %if player 1 is to the right of player 2
-
-             hit =  1;
-        else 
-
-             hit = 0;
-
-        end
+        hit = jabfunction(x1, y1, x2, y2);
         
         heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
         health = health - heart*hit;
@@ -325,7 +322,7 @@ end
  
 function dxdt = f(y, h, uy)
  
-    global m rho Cd A  F_drag g 
+    global m rho Cd A  F_drag g eq
  
     dxdt = zeros(2,1);
  
@@ -335,12 +332,12 @@ function dxdt = f(y, h, uy)
     F_drag = 0.5 * rho * Cd * A * v * abs(v) * h;
  
     dxdt(1) = v;
-    dxdt(2) = (uy - F_drag - g*m) / m; 
+    dxdt(2) = (uy - F_drag - g*m)*eq / m; 
 end
  
 function dxdtx = fx(x, h, ux)
  
-    global m rho Cd A F_dragx 
+    global m rho Cd A F_dragx eq
  
     dxdtx = zeros(2,1);
  
@@ -352,11 +349,11 @@ function dxdtx = fx(x, h, ux)
 
 
     dxdtx(1) = vx;
-    dxdtx(2) = (ux - F_dragx) / m;
+    dxdtx(2) = (ux - F_dragx)*eq / m;
 end
 function dxdtx2 = fx2(xp2, h, u2x)
  
-    global m rho Cd A F_dragx2
+    global m rho Cd A F_dragx2 eq
  
     dxdtx2 = zeros(2,1);
  
@@ -367,7 +364,7 @@ function dxdtx2 = fx2(xp2, h, u2x)
 
 
     dxdtx2(1) = vx2;
-    dxdtx2(2) = ((u2x - F_dragx2)) / m;
+    dxdtx2(2) = (u2x - F_dragx2)*eq / m;
 end
 %% ============================================================
 % FIGURE SETUP FUNCTION
@@ -470,4 +467,27 @@ scale = 200/imgW;
     dhb_height = 0.06;   
     dhb_left   = 0.01;   
     dhb_top    = 0.97;  
+end
+
+
+function jab = jabfunction(x1, y1, x2, y2)
+    
+    global hitbox
+    
+
+    if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox        %if player 1 is to the left of player 2
+
+             hit = 1;                                             % 1 means he hit
+
+        elseif x1 > x2 && (x1 - hitbox) < x2 && y1 < y2 +hitbox   %if player 1 is to the right of player 2
+
+             hit =  1;
+        else 
+
+             hit = 0;
+
+    end
+
+    jab = hit;
+
 end
