@@ -1,11 +1,10 @@
 
-
 clear all
 close all
 clc
 
 % Declare global variables 
-global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl eq
+global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl  a hitbox
  
 % Declare physical constants 
 m   = 10;        % mass (kg)
@@ -17,8 +16,8 @@ F_drag = 0;      % player 1 y-component initial drag force
 F_dragx = 0;     % player 1 x-component initial drag force
 F_dragx2 = 0;    % player 2 x-component initial drag force
 F_drag2 = 0;     % player 2 y-component initial drag force
-
-eq = 0.0001;      % the Equalizer, makes everything very small to try and fit into 0-1
+a = 0;
+hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
@@ -32,13 +31,11 @@ flush(arduinoObj);
  m_crouch, alpha_crouch, m_jab, alpha_jab, ...
  m_upward_jab, alpha_upward_jab, ...
  scale,Health_Bar,alphahb,Black_HB,alphadhb,...
- hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup();
+ hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ...
+ m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,alpha_crouchflip, m_jabflip,alpha_jabflip] = figure_setup();
 
-xl = bgWidth;    % absolute x limit
-yl = bgHeight;   % absolute y limit
-
-%xl = 100;
-%yl = 100;
+xl = bgWidth*100;    % absolute x scaling
+yl = bgHeight*100;   % absolute y scaling
 
 x = [0;0];       % initializing player 1 x position and velocity
 y = [0;0];       % initializing player 1 x position and velocity
@@ -65,16 +62,16 @@ jump = image(m_jump,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scal
 
 upward_jab = image(m_upward_jab,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_upward_jab);
 
+p2run = image(m_runflip,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
+
 %% Initial Values
 
 health = 100;
 heart = 0;
-T = 100;
 
-y2 = 0.1;
+p1jabbtn = 1;
 
-jab_timer = 0;
-btn1 = 1;
+y2 = screeny; % delete this when player 2 can jump
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
@@ -93,7 +90,7 @@ while ishandle(run)
            end
 
                 raw = num(2);
-                btn2 = num(4);
+                p1jumpbtn = num(4);
                 % Deadband
                 if (raw - 512) > 300
                         
@@ -103,10 +100,9 @@ while ishandle(run)
                     up = 0;
                 end  
 
-                if btn2 == 0
+                if p1jumpbtn == 0
                         
-                  
-                    uy = 100;
+                    uy = 300;
                     
                 else
                     uy = 0;  % Reset applied force if within deadband
@@ -131,11 +127,11 @@ while ishandle(run)
                     ux = (rawx - 512);
                 end
  
-                if ux == 0 && btn1 ~= 0
+                if ux == 0 && p1jabbtn ~= 0
                     x(2) = 0;
                 
                 end
-                   btn1 = num(7);
+                   p1jabbtn = num(7);
 
                 h = 1.0+(100.0-health)*0.01;
 
@@ -158,34 +154,23 @@ while ishandle(run)
               end
     end
         
-    if raw <10
-
-        c = 0;
-    else 
-        c = 1;
-    end    
- 
-    
-    
-
-
+   
 
     % ----- RK4 Integration -----
     y = RK4(y, dt, h, uy);
     x = RK4x(x, dt, h, ux);
     xp2 = RK4x2(xp2, dt, h, u2x);
 
-    % ----- Boundary Limits -----
+    % ----- +0 Boundary Limits -----
    
-    if y(1) > 1
+    if y(1) > yl
 
-        y(1) = 1;
+        y(1) = yl;
         y(2) = 0;
     elseif y(1) < 0
         y(1) = 0;
         y(2) = 0;
     end
-   
    
     if x(1) > xl
         x(1) = xl;
@@ -201,91 +186,69 @@ while ishandle(run)
     elseif xp2(1) < 0
         xp2(1) = 0;
         xp2(2) = 0;
+     end
+   
+     %% 0-1 or 0-1.778
+    x1 = (x(1)/xl)*bgWidth;
+    y1 = (y(1)/yl)*bgHeight;
+
+    x2 =(xp2(1)/xl)*bgWidth;
+   
+     %% setting 0 - 1 & 0- 1.778 
+    if y1 > bgHeight
+
+        y1 = bgHeight;
+    elseif y1 < screeny
+        y1 = screeny;
     end
    
-     if c == 0
-
-        T = 0.2;
-        s = 2;
-    else 
-        T = 0;
-        s=1;
-
+    if x1 > bgWidth
+        x1 = bgWidth;
+    elseif x1 < 0
+        x1 = 0;
     end
-   
-   
-    x1 = x(1);
-    y1 = y(1);
 
-    x2 =xp2(1);
-   
+     if x2 > bgWidth
+        x2 = bgWidth;
 
-    if x1 > x2
+    elseif x2 < 0
+        x2 =0;
+     end
 
-        back = -1;
-        
-        
-    else 
-        back = 1;
-       
-    end    
+    %% replacing images 
+  if x1 > x2
+    set(run,'CData', m_runflip, 'AlphaData', alpha_runflip);
+    if p1jabbtn == 0 
+    set(run,'CData', m_jabflip, 'AlphaData', alpha_jabflip);
+    end
+  end
+    
+   if x1 < x2 
+       set(run,'CData', m_run, 'AlphaData', alpha_run);
+    if p1jabbtn == 0 
+    set(run,'CData', m_jab, 'AlphaData', alpha_jab);
+    end
+  end
    
   
-    if btn1 == 0
-        b = 1;
+    if p1jabbtn == 0 % make punch crouch and jump into functions add dash
 
-        if back == 1
-                
-            if (x1 + 0.15) > x2
+        if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox        %if player 1 is to the left of player 2
 
-                if x1  < x2
+             hit = 1;                                             % 1 means he hit
 
-                    if y1 < y2
+        elseif x1 > x2 && (x1 - hitbox) < x2 && y1 < y2 +hitbox   %if player 1 is to the right of player 2
 
-                        heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
-                    else 
-                        heart =0;
-                    end
-                else 
-                    heart =0;
+             hit =  1;
+        else 
 
-                end
-            else 
-                heart = 0;
-
-            end 
+             hit = 0;
 
         end
+        
+        heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
+        health = health - heart*hit;
 
-        if back ==-1
-
-        jab_timer = 5;   % lasts 5 frames
-
-             if (x1 - 30.15) < x2
-
-                if x1  > x2
-
-                    if y1 < y2
-
-                        heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
-                    else 
-                        heart =0;
-                    end
-                else 
-                    heart =0;
-
-                end
-            else 
-                heart = 0;
-
-            end 
-
-        end
-
-        health = health - heart;
-    
-    else 
-        b = 0;
     end  
     
         
@@ -297,22 +260,14 @@ while ishandle(run)
 
     set(DHB, 'XData',[dhb_left dhb_left+dhb_width], 'YData',[hb_top - hb_height hb_top], 'AlphaData', alphadhb);
 
-
-    if jab_timer > 0
-    set(run,'CData', m_jab, 'AlphaData', alpha_jab);
-    jab_timer = jab_timer - 1;
-    else
-    set(run,'CData', m_run, 'AlphaData', alpha_run);
-    end
+    set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
+    
     drawnow limitrate
 
     if health <= 0
         
-        
         close all % close figure window once guy is super toasted
-         
-        
-        
+
     end
 
 end
@@ -370,7 +325,7 @@ end
  
 function dxdt = f(y, h, uy)
  
-    global m rho Cd A  F_drag g eq
+    global m rho Cd A  F_drag g 
  
     dxdt = zeros(2,1);
  
@@ -380,12 +335,12 @@ function dxdt = f(y, h, uy)
     F_drag = 0.5 * rho * Cd * A * v * abs(v) * h;
  
     dxdt(1) = v;
-    dxdt(2) = ((uy - F_drag - g*m)*eq) / m; 
+    dxdt(2) = (uy - F_drag - g*m) / m; 
 end
  
 function dxdtx = fx(x, h, ux)
  
-    global m rho Cd A F_dragx eq
+    global m rho Cd A F_dragx 
  
     dxdtx = zeros(2,1);
  
@@ -397,22 +352,22 @@ function dxdtx = fx(x, h, ux)
 
 
     dxdtx(1) = vx;
-    dxdtx(2) = ((ux - F_dragx)*eq) / m; % + mom
+    dxdtx(2) = (ux - F_dragx) / m;
 end
 function dxdtx2 = fx2(xp2, h, u2x)
  
-    global m rho Cd A F_dragx2 eq
+    global m rho Cd A F_dragx2
  
     dxdtx2 = zeros(2,1);
  
-    vx2 = xp2(2)*u2x/(abs(u2x)+eq);
+    vx2 = xp2(2);
  
     % Quadratic drag
     F_dragx2 = 0.5 * rho * Cd * A * vx2 * abs(vx2) * h;
 
 
     dxdtx2(1) = vx2;
-    dxdtx2(2) = ((u2x - F_dragx2)*eq) / m; % + mom
+    dxdtx2(2) = ((u2x - F_dragx2)) / m;
 end
 %% ============================================================
 % FIGURE SETUP FUNCTION
@@ -421,9 +376,11 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab, ...
           scale,Health_Bar,alphahb,Black_HB,alphadhb,...
-          hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top] = figure_setup()
+          hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
+          m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip, m_jabflip,alpha_jabflip] = figure_setup()
 
  
+
     % Create fullscreen figure
 figure('WindowState','maximized', 'Toolbar','none', 'MenuBar','none', 'Color','k');
     
@@ -458,17 +415,33 @@ ylim([0 bgHeight])
 m_run = flipud(m_run);
 alpha_run = flipud(alpha_run);
 
+[m_runflip,~,alpha_runflip] = imread('m_run.png');
+m_runflip = rot90(m_runflip,2);
+alpha_runflip = rot90(alpha_runflip,2);
+
 [m_jump,~,alpha_jump] = imread('m_jump.png');
 m_jump = flipud(m_jump);
 alpha_jump = flipud(alpha_jump);
+
+[m_jumpflip,~,alpha_jumpflip] = imread('m_jump.png');
+m_jumpflip = rot90(m_jumpflip,2);
+alpha_jumpflip = rot90(alpha_jumpflip,2);
 
 [m_crouch,~,alpha_crouch] = imread('m_crouch.png');
 m_crouch = flipud(m_crouch);
 alpha_crouch = flipud(alpha_crouch);
 
+[m_crouchflip,~,alpha_crouchflip] = imread('m_crouch.png');
+m_crouchflip = rot90(m_crouchflip,2);
+alpha_crouchflip = rot90(alpha_crouchflip,2);
+
 [m_jab,~,alpha_jab] = imread('m_jab.png');
 m_jab = flipud(m_jab);
 alpha_jab = flipud(alpha_jab);
+
+[m_jabflip,~,alpha_jabflip] = imread('m_jab.png');
+m_jabflip = rot90(m_jabflip,2);
+alpha_jabflip = rot90(alpha_jabflip,2);
 
 [m_upward_jab,~,alpha_upward_jab] = imread('m_upward_jab.png');
 m_upward_jab = flipud(m_upward_jab);
@@ -498,4 +471,3 @@ scale = 200/imgW;
     dhb_left   = 0.01;   
     dhb_top    = 0.97;  
 end
-
