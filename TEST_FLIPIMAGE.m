@@ -112,7 +112,7 @@ while ishandle(run)
 
                 if p1jumpbtn == 0
                         
-                    uy = 500*(0.15+0.85*crouch);
+                    uy = 800*(0.15+0.85*crouch);
 
                 elseif p1dashbtn == 0
 
