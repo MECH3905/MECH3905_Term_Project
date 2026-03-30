@@ -21,11 +21,16 @@ eq = 0.1;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj = serialport("COM4",115200);   % <<< CHANGE IF NEEDED
-pause(5)
-configureTerminator(arduinoObj,"CR/LF");
-flush(arduinoObj);
+arduinoObj1 = serialport("COM4",115200);   % Player 1
+arduinoObj2 = serialport("COM5",115200);   % Player 2
 
+pause(5)
+
+configureTerminator(arduinoObj1,"CR/LF");
+configureTerminator(arduinoObj2,"CR/LF");
+
+flush(arduinoObj1);
+flush(arduinoObj2);
 
 %% ---------------- FIGURE SETUP ----------------
 [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
@@ -40,8 +45,10 @@ flush(arduinoObj);
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
 
-x = [0;0];       % initializing player 1 x position and velocity
-y = [0;0];       % initializing player 1 x position and velocity
+xstart = [0;0];       % initializing player 1 x position and velocity
+ystart = [0;0];       % initializing player 1 x position and velocity
+x2start = [0:0];
+y2start = [0:0];
 
 xp2 = [0;0];     % initializing player 2 x position and velocity
 
@@ -72,34 +79,48 @@ burnt = 1;
 
 p1jabbtn = 1;
 
-y2 = screeny; % delete this when player 2 can jump
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
  
     % ----- Read Arduino -----
-    if arduinoObj.NumBytesAvailable > 0
- 
-        data = readline(arduinoObj);
-        tmp = split(strtrim(data),',');
- 
-       
-           num = str2double(tmp);
-
-           if numel(num) < 9 || any(isnan(num(1:9)))
-              continue
-           end
-
-                raw = num(2);
-                rawx = num(3);
-                p1jumpbtn = num(4);
-                p1dashbtn = num(5);
-                p1crouchbtn = num(6);
-                p1jabbtn = num(7);
-
-
-                P2leftBtn = num(8);
-                P2rightBtn = num(9);
+    % Player 1
+    if arduinoObj1.NumBytesAvailable > 0
+    
+        data1 = readline(arduinoObj1);
+        tmp1 = split(strtrim(data1),',');
+        num1 = str2double(tmp1);
+    
+        if numel(num1) < 7 || any(isnan(num1))
+            continue
+        end
+    
+        raw = num1(2);
+        rawx = num1(3);
+        p1jumpbtn = num1(4);
+        p1dashbtn = num1(5);
+        p1crouchbtn = num1(6);
+        p1jabbtn = num1(7);
+    end
+    
+    % player 2
+    if arduinoObj2.NumBytesAvailable > 0
+    
+        data2 = readline(arduinoObj2);
+        tmp2 = split(strtrim(data2),',');
+        num2 = str2double(tmp2);
+    
+        if numel(num2) < 7 || any(isnan(num2))
+            continue
+        end
+    
+        raw2 = num2(2);
+        rawx2 = num2(3);
+        p2jumpbtn = num2(4);
+        p2dashbtn = num2(5);
+        p2crouchbtn = num2(6);
+        p2jabbtn = num2(7);
+    end
 
                 % Deadband
                 if (raw - 512) > 300
@@ -147,54 +168,85 @@ while ishandle(run)
                 
  
                 if ux == 0 %&& p1jabbtn ~= 0
-                    x(2) = 0;
+                    xstart(2) = 0;
                 
                 end
-
-   
-              if P2rightBtn == 1 && P2leftBtn == 0
-
-                  u2x = -200;
-
-              elseif P2leftBtn == 1 && P2rightBtn == 0
-
-                  u2x = 200;
-
-              else
-
-                  u2x = 0;
-
-              end
+                if (raw2 - 512) > 300
+                    up2 = 0;
+                else
+                    up2 = 1;
+                end
+                
+                if p2jumpbtn == 0
+                    u2y = 300;
+                
+                elseif p2dashbtn == 0
+                    u2y = 300*(raw2-512)/512;
+                
+                else
+                    u2y = 0;
+                end
+                
+                if p2crouchbtn == 0
+                    crouch2 = 0;
+                else
+                    crouch2 = 1;
+                end
+                
+                if abs(rawx2 - 512) < 10
+                    u2x = 0;
+                
+                elseif p2dashbtn == 0
+                    u2x = -3000*(rawx2-512)/512;
+                
+                else
+                    u2x = -(rawx2 - 512);
+                end
+                
+                if u2x == 0 && p2jabbtn ~= 0
+                    xp2(2) = 0;
+                end
 
               h = 1.0+(100.0-health)*0.01;
-
-              
-    end
-        
-   
+            
 
     % ----- RK4 Integration -----
-    y = RK4(y, dt, h, uy);
-    x = RK4x(x, dt, h, ux);
+    ystart = RK4(ystart, dt, h, uy);
+    xstart = RK4x(xstart, dt, h, ux);
+    
     xp2 = RK4x2(xp2, dt, h, u2x);
+    y2start = RK4(y2start, dt, h, u2y);
 
     % ----- Absolute Boundary Limits -----
-   
-    if y(1) > yl
-
-        y(1) = yl;
-        y(2) = 0;
-    elseif y(1) < 0
-        y(1) = 0;
-        y(2) = 0;
+    if y2start(1) > yl
+        y2start(1) = yl;
+        y2start(2) = 0;
+    
+    elseif y2start(1) < 0
+        y2start(1) = 0;
+        y2start(2) = 0;
+    
     end
+
+    if ystart(1) > yl
+    
+        ystart(1) = yl;
+        ystart(2) = 0;
+    
+    elseif ystart(1) < 0
+    
+        ystart(1) = 0;
+        ystart(2) = 0;
+    
+    end
+
    
-    if x(1) > xl
-        x(1) = xl;
-        x(2) = 0;
-    elseif x(1) < -xl
-        x(1) = -xl;
-        x(2) = 0;
+    if xstart(1) > xl
+        xstart(1) = xl;
+        xstart(2) = 0;
+    elseif xstart(1) < -xl
+        xstart(1) = -xl;
+        xstart(2) = 0;
     end
 
      if xp2(1) > xl
@@ -207,8 +259,8 @@ while ishandle(run)
    
      %% y = screeeny-1 && x = 0-1.778
 
-    x1 = ((x(1)+xl)/(2*xl))*bgWidth;
-    y1 = (y(1)/yl)*bgHeight;
+    x1 = ((xstart(1)+xl)/(2*xl))*bgWidth;
+    y1 = (ystart(1)/yl)*bgHeight;
 
     if y1 > bgHeight
 
@@ -218,7 +270,14 @@ while ishandle(run)
     end
 
     x2 =((xp2(1)+xl)/(2*xl))*bgWidth;
-   
+    
+    y2 = (y2start(1)/yl)*bgHeight;
+    
+    if y2 > bgHeight
+        y2 = bgHeight;
+    elseif y2 < screeny
+        y2 = screeny;
+    end   
     %% replacing plyer images  
     
     player1image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
@@ -229,7 +288,7 @@ while ishandle(run)
     set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
     set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-    player2image = changeimage(x2, up,  burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+    player2image = changeimage(u2x, up2,  burnt, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run);
@@ -237,7 +296,7 @@ while ishandle(run)
   
     %% Player hit and damage function
     if p1jabbtn == 0 % make punch crouch and jump into functions add dash
-        x(2) = 0;
+        xstart(2) = 0;
         hit = jabfunction(x1, y1, x2, y2, up);
         
         heart =  (0.25 + (sqrt(ux^2 + uy^2))*0.000001)*crouch;
@@ -246,8 +305,16 @@ while ishandle(run)
         burnt = 0.25 + health/133.33;
 
     end  
+    if p2jabbtn == 0
+
+    hit2 = jabfunction(x2, y2, x1, y1, up2);
+
+    heart2 = (0.25 + (sqrt(u2x^2 + u2y^2))*0.000001)*crouch2;
+
+    health = health - heart2*hit2;
+
+    end
     
-        
     blackw = 1.000001 - health/100;
     dhb_width  = 0.18*blackw;
 
@@ -270,8 +337,8 @@ while ishandle(run)
 
 end
      
-clear arduinoObj
-
+clear arduinoObj1
+clear arduinoObj2
 
 %% ============================================================
 % RK4 FUNCTION
