@@ -5,7 +5,7 @@ close all
 clc
 
 % Declare global variables 
-global m rho Cd A   F_drag F_dragx g F_dragx2 F_drag2 xl yl eq hitbox
+
  
 % Declare physical constants 
 m   = 10;        % mass (kg)
@@ -35,7 +35,7 @@ flush(arduinoObj);
  hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ...
  m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,...
  alpha_crouchflip,m_jabflip,alpha_jabflip,m_upward_jabflip,alpha_upward_jabflip,...
- burnt_m_run,alpha_burnt_run] = figure_setup();
+ burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip] = figure_setup();
 
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
@@ -71,6 +71,8 @@ burnt = 1;
 crouch = 1;
 p1jabbtn = 1;
 
+u2x = 0;
+
 y2 = screeny; % delete this when player 2 can jump
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
@@ -96,14 +98,9 @@ while ishandle(run)
                 p1crouchbtn = num(6);
                 p1jabbtn = num(7);
 
-
-                P2leftBtn = num(8);
-                P2rightBtn = num(9);
-
                 % Deadband
                 if (raw - 512) > 300
                         
-                  
                     up = 0;
                 
                 else 
@@ -112,35 +109,26 @@ while ishandle(run)
 
                 if p1jumpbtn == 0
                         
-                    uy = 800*(0.15+0.85*crouch);
+                    uy = 800*(0.15+0.85*p1crouchbtn);
 
                 elseif p1dashbtn == 0
 
-                    uy = 400*(raw-512)*(0.15+0.85*crouch)/512;
+                    uy = 400*(raw-512)*(0.15+0.85*p1crouchbtn)/512;
                     
                 else
                     uy = 0;  % Reset applied force if within deadband
                 end
 
-                if p1crouchbtn == 0
-
-                    crouch = 0;
-                    
-                else 
-                    crouch = 1;
-                end 
-                
- 
                 % Deadband
                 if abs(rawx - 512) < 20
                     ux = 0;
 
                 elseif p1dashbtn == 0
 
-                    ux = 3000*(rawx-512)*(0.15+0.85*crouch)/512;
+                    ux = 3000*(rawx-512)*(0.15+0.85*p1crouchbtn)/512;
                     
                 else 
-                    ux = (rawx - 512)*(0.15+0.85*crouch);
+                    ux = (rawx - 512)*(0.15+0.85*p1crouchbtn);
                     
                 end 
                 
@@ -150,30 +138,16 @@ while ishandle(run)
                 
                 end
 
-   
-              if P2rightBtn == 1 && P2leftBtn == 0
-
-                  u2x = -200;
-
-              elseif P2leftBtn == 1 && P2rightBtn == 0
-
-                  u2x = 200;
-
-              else
-
-                  u2x = 0;
-
-              end
-
-              h = 1.0+(100.0-health)*0.01;
+              
     end
         
-   
+    u2x = 0;
+    h = 1.0+(100.0-health)*0.01;
 
     % ----- RK4 Integration -----
-    y = RK4(y, dt, h, uy);
-    x = RK4x(x, dt, h, ux);
-    xp2 = RK4x2(xp2, dt, h, u2x);
+    y = RK4(y, dt, h, uy,m, rho, Cd, A, g);
+    x = RK4x(x, dt, h, ux, m, rho, Cd, A, eq);
+    xp2 = RK4x2(xp2, dt, h, u2x, m, rho, Cd, A, eq);
   
     if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
          
@@ -223,34 +197,55 @@ while ishandle(run)
     x2 =((xp2(1)+xl)/(2*xl))*bgWidth;
    
     %% replacing plyer images  
-    
-    player1image = changeimage(ux,x1,x2, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+   
+    if x1 <= x2
+        
+        player1image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
-          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run);
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
 
-    set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
-    set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
+        set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
+        set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-    player2image = changeimage(u2x,x2,x1, up,  burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player2image = changeimageflip(u2x, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
-          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run);
-    set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
+
+        set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+
+    else
+        player1image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
+
+        set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
+        set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
+
+        player2image = changeimage(u2x, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
+
+        set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+
+    end
 
     %% Player hit and damage function
     if p1jabbtn == 0 && p1crouchbtn ==1 % make punch crouch and jump into functions add dash
         
-        hit = jabfunction(x1, y1, x2, y2, up);
+        hit = jabfunction(x1, y1, x2, y2, up, hitbox);
 
         if hit > 0
             u2x = (abs(ux)/2)*(ux/(abs(ux)+0.001));
-        end
-        
-        heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
-        health = health - heart*hit;
 
-        burnt = 0.25 + health/133.33;
+            heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
+            health = health - heart*hit;
+
+            burnt = 0.25 + health/133.33;
+        end
 
     end  
     
@@ -284,42 +279,42 @@ clear arduinoObj
 % RK4 FUNCTION
 % ============================================================
  
-function y_new = RK4(y, dt, h, uy)
+function y_new = RK4(y, dt, h, uy,m, rho, Cd, A, g)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*f(y, h, uy);
-    k2=dt*f(y+a21*k1, h, uy);
-    k3=dt*f(y+a31*k1+a32*k2, h, uy);
-    k4=dt*f(y+a41*k1+a42*k2+a43*k3, h, uy);
+    k1=dt*f(y, h, uy,m, rho, Cd, A, g);
+    k2=dt*f(y+a21*k1, h, uy,m, rho, Cd, A, g);
+    k3=dt*f(y+a31*k1+a32*k2, h, uy,m, rho, Cd, A, g);
+    k4=dt*f(y+a41*k1+a42*k2+a43*k3, h, uy,m, rho, Cd, A, g);
 
     y_new=y+w1*k1+w2*k2+w3*k3+w4*k4;
 end
 
 
 
-function x_new = RK4x(x, dt, h, ux)
+function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A, eq)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx(x, h, ux);
-    k2=dt*fx(x+a21*k1, h, ux);
-    k3=dt*fx(x+a31*k1+a32*k2, h, ux);
-    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux);
+    k1=dt*fx(x, h, ux, m, rho, Cd, A, eq);
+    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A, eq);
+    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A, eq);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A, eq);
 
     x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
 
 
 
-function x2_new = RK4x2(xp2, dt, h, u2x)
+function x2_new = RK4x2(xp2, dt, h, u2x, m, rho, Cd, A, eq)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx2(xp2, h, u2x);
-    k2=dt*fx2(xp2+a21*k1, h, u2x);
-    k3=dt*fx2(xp2+a31*k1+a32*k2, h, u2x);
-    k4=dt*fx2(xp2+a41*k1+a42*k2+a43*k3, h, u2x);
+    k1=dt*fx2(xp2, h, u2x, m, rho, Cd, A, eq);
+    k2=dt*fx2(xp2+a21*k1, h, u2x, m, rho, Cd, A, eq);
+    k3=dt*fx2(xp2+a31*k1+a32*k2, h, u2x, m, rho, Cd, A, eq);
+    k4=dt*fx2(xp2+a41*k1+a42*k2+a43*k3, h, u2x, m, rho, Cd, A, eq);
 
     x2_new=xp2+w1*k1+w2*k2+w3*k3+w4*k4;
 end
@@ -328,9 +323,9 @@ end
 % DYNAMICS FUNCTION
 % ============================================================
  
-function dxdt = f(y, h, uy)
+function dxdt = f(y, h, uy,m, rho, Cd, A, g)
  
-    global m rho Cd A  F_drag g eq
+    
  
     dxdt = zeros(2,1);
  
@@ -343,9 +338,9 @@ function dxdt = f(y, h, uy)
     dxdt(2) = (uy - F_drag - g*m) / m; 
 end
  
-function dxdtx = fx(x, h, ux)
+function dxdtx = fx(x, h, ux, m, rho, Cd, A, eq)
  
-    global m rho Cd A F_dragx eq
+    
  
     dxdtx = zeros(2,1);
  
@@ -359,9 +354,9 @@ function dxdtx = fx(x, h, ux)
     dxdtx(1) = vx;
     dxdtx(2) = (ux*eq - F_dragx) / m;
 end
-function dxdtx2 = fx2(xp2, h, u2x)
+function dxdtx2 = fx2(xp2, h, u2x, m, rho, Cd, A, eq)
  
-    global m rho Cd A F_dragx2 eq
+    
  
     dxdtx2 = zeros(2,1);
  
@@ -384,7 +379,7 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
           m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, ...
-          burnt_m_run,alpha_burnt_run] = figure_setup()
+          burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip] = figure_setup()
 
  
 
@@ -429,6 +424,10 @@ alpha_runflip = rot90(alpha_runflip,2);
 [burnt_m_run,~,alpha_burnt_run] = imread('burnt_m_run.png');
 burnt_m_run = flipud(burnt_m_run);
 alpha_burnt_run = flipud(alpha_burnt_run);
+
+[burnt_m_runflip,~,alpha_burnt_runflip] = imread('burnt_m_run.png');
+burnt_m_runflip = rot90(burnt_m_runflip,2);
+alpha_burnt_runflip = rot90(alpha_burnt_runflip,2);
 
 [m_jump,~,alpha_jump] = imread('m_jump.png');
 m_jump = flipud(m_jump);
@@ -488,9 +487,9 @@ scale = 200/imgW;
 end
 
 
-function jab = jabfunction(x1, y1, x2, y2, up)
+function jab = jabfunction(x1, y1, x2, y2, up, hitbox)
     
-    global hitbox
+    
     
 
     if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2      %if player 1 is to the left of player 2
@@ -510,57 +509,133 @@ function jab = jabfunction(x1, y1, x2, y2, up)
 
 end
 
-function image = changeimage(ux, x1,x2, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+
+function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
-          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run)
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip)
 
-    image{1} = m_run;
-    image{2} = alpha_run*burnt;
-    image{3} = burnt_m_run;
-    image{4} = alpha_burnt_run;
+    
+ if ux >= 0 
+       %image{1} = m_run;
+       %image{2}= alpha_run*burnt;
+       image{3} = burnt_m_run;
+        image{4} = alpha_burnt_run;
 
- if x1 > x2
+    if p1crouchbtn == 0 
+        image{1} = m_crouch;
+        image{2}= alpha_crouch*burnt;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+
+        if up == 0
+            image{1} = m_upward_jab;
+            image{2}= alpha_upward_jab*burnt;
+            
+        else
+            image{1} = m_jab;
+            image{2}= alpha_jab*burnt;
+        end
+    
+    elseif p1jumpbtn == 0
+        image{1} = m_jump;
+        image{2}= alpha_jump*burnt;
+
+    else
+        image{1} = m_run;
+        image{2} = alpha_run*burnt;
+        image{3} = burnt_m_run;
+        image{4} = alpha_burnt_run;
+    end
+    
+
+ else
+   % image{1} = m_runflip;
+    %image{2} = alpha_runflip*burnt;   
+        image{3} = burnt_m_runflip;
+        image{4} = alpha_burnt_runflip;
+    if p1crouchbtn == 0 
+        image{1} = m_crouchflip;
+        image{2}= alpha_crouchflip*burnt;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+        if up == 0
+            image{1} = m_upward_jabflip;
+            image{2}= alpha_upward_jabflip*burnt;
+            
+        else
+            image{1} = m_jabflip;
+            image{2}= alpha_jabflip*burnt;   
+        end
+    
+    elseif p1jumpbtn == 0
+        image{1} = m_jumpflip;
+        image{2}= alpha_jumpflip*burnt;
+        
+    else
+        image{1} = m_runflip;
+        image{2} = alpha_runflip*burnt;
+        image{3} = burnt_m_runflip;
+        image{4} = alpha_burnt_runflip;
+
+    end
+ end
+ 
+ 
+end
+
+function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip)
+
+    
+
  if ux <= 0
-    image{1} = m_runflip;
-    image{2} = alpha_runflip*burnt;   
+   % image{1} = m_runflip;
+    %image{2} = alpha_runflip*burnt;   
+    image{3} = burnt_m_runflip;
+        image{4} = alpha_burnt_runflip;
 
     if p1crouchbtn == 0 
         image{1} = m_crouchflip;
         image{2}= alpha_crouchflip*burnt;
         
-    end
-
-    if p1jabbtn == 0 && p1crouchbtn == 1
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
         if up == 0
             image{1} = m_upward_jabflip;
             image{2}= alpha_upward_jabflip*burnt;
             
         else
             image{1} = m_jabflip;
-            image{2}= alpha_jabflip*burnt;
-            
+            image{2}= alpha_jabflip*burnt;   
         end
-    end
-
-    if p1jumpbtn == 0
+    
+    elseif p1jumpbtn == 0
         image{1} = m_jumpflip;
         image{2}= alpha_jumpflip*burnt;
         
+    else
+        image{1} = m_runflip;
+        image{2} = alpha_runflip*burnt;
+        image{3} = burnt_m_runflip;
+        image{4} = alpha_burnt_runflip;
+
     end
- end
- if ux > 0 
-       image{1} = m_run;
-       image{2}= alpha_run*burnt;
-       
+ 
+ 
+ else 
+       %image{1} = m_run;
+       %image{2}= alpha_run*burnt;
+       image{3} = burnt_m_run;
+        image{4} = alpha_burnt_run;
 
     if p1crouchbtn == 0 
         image{1} = m_crouch;
         image{2}= alpha_crouch*burnt;
         
-    end
-
-    if p1jabbtn == 0 && p1crouchbtn == 1
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+        
         if up == 0
             image{1} = m_upward_jab;
             image{2}= alpha_upward_jab*burnt;
@@ -568,75 +643,18 @@ function image = changeimage(ux, x1,x2, up, burnt, p1crouchbtn, p1jabbtn, p1jump
         else
             image{1} = m_jab;
             image{2}= alpha_jab*burnt;
-            
         end
-    end   
     
-    if p1jumpbtn == 0
+    elseif p1jumpbtn == 0
         image{1} = m_jump;
         image{2}= alpha_jump*burnt;
+
+    else
+        image{1} = m_run;
+        image{2} = alpha_run*burnt;
+        image{3} = burnt_m_run;
+        image{4} = alpha_burnt_run;
     end
     
 end
  end
-if x1 < x2    
-if ux >= 0 
-       image{1} = m_run;
-       image{2}= alpha_run*burnt;
-       
-
-    if p1crouchbtn == 0 
-        image{1} = m_crouch;
-        image{2}= alpha_crouch*burnt;
-        
-    end
-
-    if p1jabbtn == 0 && p1crouchbtn == 1
-        if up == 0
-            image{1} = m_upward_jab;
-            image{2}= alpha_upward_jab*burnt;
-            
-        else
-            image{1} = m_jab;
-            image{2}= alpha_jab*burnt;
-            
-        end
-    end   
-    
-    if p1jumpbtn == 0
-        image{1} = m_jump;
-        image{2}= alpha_jump*burnt;
-    end
-    
-end
-if ux < 0
-    image{1} = m_runflip;
-    image{2} = alpha_runflip*burnt;   
-
-    if p1crouchbtn == 0 
-        image{1} = m_crouchflip;
-        image{2}= alpha_crouchflip*burnt;
-        
-    end
-
-    if p1jabbtn == 0 && p1crouchbtn == 1
-        if up == 0
-            image{1} = m_upward_jabflip;
-            image{2}= alpha_upward_jabflip*burnt;
-            
-        else
-            image{1} = m_jabflip;
-            image{2}= alpha_jabflip*burnt;
-            
-        end
-    end
-
-    if p1jumpbtn == 0
-        image{1} = m_jumpflip;
-        image{2}= alpha_jumpflip*burnt;
-        
-    end
-end
-end
-
-end
