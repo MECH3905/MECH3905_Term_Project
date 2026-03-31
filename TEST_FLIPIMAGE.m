@@ -104,6 +104,10 @@ u2x = 0;
 backgroundsound = audioplayer(y, Fs);
 play(backgroundsound);
 
+%%load jab sound 
+[y, Fs] = audioread('jab_oof.mp3');
+Jab_sound = audioplayer(y, Fs);
+
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
@@ -360,8 +364,6 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
             
             % jab Sound
-            [sound, poop] = audioread('jab_oof.mp3');
-            Jab_sound = audioplayer(sound, poop);
             play(Jab_sound);
 
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
@@ -385,7 +387,8 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
             
             % jab Sound
-            
+            play(Jab_sound);
+
             
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
