@@ -56,7 +56,7 @@ y1start = [0;0];       % initializing player 1 x position and velocity
 x2start = [0;0];
 y2start = [0;0];
 
-xp2 = [0;0];     % initializing player 2 x position and velocity
+
 
 player1image = {0,0};
 player2image = {0,0};
@@ -97,6 +97,7 @@ p1jabbtn = 1;
 
 ux = 0;
 u2x = 0;
+
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
@@ -149,11 +150,11 @@ while ishandle(run)
                     up = 1;
                 end  
 
-                if p1jumpbtn == 0
+                if p1jumpbtn == 0 && y1 < (screeny+0.2)
                         
                     uy = 800*(0.15+0.85*p1crouchbtn);
 
-                elseif p1dashbtn == 0 && p1crouchbtn == 1
+                elseif p1dashbtn == 0 && p1crouchbtn == 1 && y1 < (screeny+0.2)
 
                     uy = -400*(raw-512)/512;
                     
@@ -166,7 +167,7 @@ while ishandle(run)
                     ux = 0;
                     x1start(2) = 0;
 
-                elseif p1dashbtn == 0 && p1crouchbtn == 1
+                elseif p1dashbtn == 0 && p1crouchbtn == 1 
 
                     ux = -3000*(rawx-512)/512;
                     
@@ -184,10 +185,10 @@ while ishandle(run)
                     up2 = 1;
                 end
                 
-                if p2jumpbtn == 0
+                if p2jumpbtn == 0 && y2 < (screeny+0.2)
                     u2y = 800*(0.15+0.85*p2crouchbtn);
                 
-                elseif p2dashbtn == 0 && p2crouchbtn == 1
+                elseif p2dashbtn == 0 && p2crouchbtn == 1 && y2 < (screeny+0.2)
                     u2y = -400*(raw2-512)/512;
                 
                 else
@@ -196,9 +197,9 @@ while ishandle(run)
                 
                 if abs(rawx2 - 512) < 20 && p1jabbtn == 1
                     u2x = 0;
-                    xp2(2) = 0;
+                    x2start(2) = 0;
                 
-                elseif p2dashbtn == 0 && p2crouchbtn == 1
+                elseif p2dashbtn == 0 && p2crouchbtn == 1 
                     u2x = -3000*(rawx2-512)/512;
                 
                 else
@@ -213,8 +214,8 @@ h2 = 1.0+(100.0-health2)*0.05;
 
 % ----- RK4 Integration -----
 y1start = RK4(y1start, dt, h1, uy,m, rho, Cd, A, g);
-x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A, eq);
-xp2 = RK4x2(xp2, dt, h2, u2x, m, rho, Cd, A, eq);
+x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A);
+x2start = RK4x(x2start, dt, h2, u2x, m, rho, Cd, A);
 y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
   
     if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
@@ -254,12 +255,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     end
     
     % player 2 x
-    if xp2(1) > xl
-        xp2(1) = xl;
-        xp2(2) = 0;
-    elseif xp2(1) < -xl
-        xp2(1) = -xl;
-        xp2(2) = 0;
+    if x2start(1) > xl
+        x2start(1) = xl;
+        x2start(2) = 0;
+    elseif x2start(1) < -xl
+        x2start(1) = -xl;
+        x2start(2) = 0;
     end
     
     
@@ -274,7 +275,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
         y1 = screeny;
     end
     
-    x2 = ((xp2(1)+xl)/(2*xl))*bgWidth;
+    x2 = ((x2start(1)+xl)/(2*xl))*bgWidth;
     y2 = (y2start(1)/yl)*bgHeight;
     
     if y2 > bgHeight
@@ -346,12 +347,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
 %% Player hit and damage function
     
     % playuer 1 hits player 2 
-    if p1jabbtn == 0 && p1crouchbtn == 1
+    if p1jabbtn == 0 && p1crouchbtn == 1 &&  p2crouchbtn == 1
     
         hit = jabfunction(x1, y1, x2, y2, up, hitbox);
     
         if hit > 0
-            u2x = (abs(ux))*(ux/(abs(ux)+0.001));
+            u2x = ux*(abs(ux)/(abs(ux)+0.001));
     
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
@@ -362,12 +363,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     
     
     % playuer 2 hits player 1
-    if p2jabbtn == 0 && p2crouchbtn == 1
+    if p2jabbtn == 0 && p2crouchbtn == 1 && p1crouchbtn == 1
     
         hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
     
         if hit2 > 0
-            ux = (abs(u2x))*(u2x/(abs(u2x)+0.001));
+            ux = u2x*(abs(u2x)/(abs(u2x)+0.001));
     
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
@@ -407,7 +408,8 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
 
     if health1 <= 0 || health2 <= 0
         
-        close all % close figure window once guy is super toasted
+        break
+        %close all % close figure window once guy is super toasted
 
     end
 
@@ -434,31 +436,21 @@ end
 
 
 
-function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A, eq)
+function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx(x, h, ux, m, rho, Cd, A, eq);
-    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A, eq);
-    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A, eq);
-    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A, eq);
+    k1=dt*fx(x, h, ux, m, rho, Cd, A);
+    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A);
+    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A);
 
     x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
 
 
 
-function x2_new = RK4x2(xp2, dt, h, u2x, m, rho, Cd, A, eq)
-    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
-    a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx2(xp2, h, u2x, m, rho, Cd, A, eq);
-    k2=dt*fx2(xp2+a21*k1, h, u2x, m, rho, Cd, A, eq);
-    k3=dt*fx2(xp2+a31*k1+a32*k2, h, u2x, m, rho, Cd, A, eq);
-    k4=dt*fx2(xp2+a41*k1+a42*k2+a43*k3, h, u2x, m, rho, Cd, A, eq);
-
-    x2_new=xp2+w1*k1+w2*k2+w3*k3+w4*k4;
-end
  
 %% ============================================================
 % DYNAMICS FUNCTION
@@ -479,7 +471,7 @@ function dxdt = f(y, h, uy,m, rho, Cd, A, g)
     dxdt(2) = (uy - F_drag - g*m) / m; 
 end
  
-function dxdtx = fx(x, h, ux, m, rho, Cd, A, eq)
+function dxdtx = fx(x, h, ux, m, rho, Cd, A)
  
     
  
@@ -493,23 +485,10 @@ function dxdtx = fx(x, h, ux, m, rho, Cd, A, eq)
 
 
     dxdtx(1) = vx;
-    dxdtx(2) = (ux*eq - F_dragx) / m;
+    dxdtx(2) = (ux - F_dragx) / m;
 end
-function dxdtx2 = fx2(xp2, h, u2x, m, rho, Cd, A, eq)
- 
-    
- 
-    dxdtx2 = zeros(2,1);
- 
-    vx2 = xp2(2);
- 
-    % Quadratic drag
-    F_dragx2 = 0.5 * rho * Cd * A * vx2 * abs(vx2) * h;
 
 
-    dxdtx2(1) = vx2;
-    dxdtx2(2) = (u2x*eq - F_dragx2) / m;
-end
 %% ============================================================
 % FIGURE SETUP FUNCTION
 % ============================================================
