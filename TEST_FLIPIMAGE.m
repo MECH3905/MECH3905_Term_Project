@@ -65,7 +65,8 @@ dhb_fullwidth = 0.18;
 
 %% Initializing Images
 HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP1);
-HB2 = image(P2_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
+p2_left = bgWidth - hb_left - hb_width;
+HB2 = image(P2_HB, 'XData',[p2_left, p2_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
 
 DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_fullwidth], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
 DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
@@ -359,7 +360,9 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     
     % player 1 damage bar
     
-    set(DHB2, 'XData',[bgWidth-0.01-dhb_width2 bgWidth-0.01], 'YData',[0.97-0.06 0.97]);
+p2_dhb_left = bgWidth - dhb_left - dhb_width;
+
+set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height dhb_top]);
 
     drawnow limitrate
 
