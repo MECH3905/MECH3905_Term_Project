@@ -78,7 +78,7 @@ DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_to
 DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
 
 
-burntrun = image(Roasted_Run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Run);
+burntrun = image(Roasted_Run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Run);  
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
 
 burntrun2 = image(Roasted_Runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Runflip);
@@ -163,8 +163,8 @@ while ishandle(run)
                 end
 
                 % Deadband
-                if abs(rawx - 512) < 20 && p2jabbtn == 1
-                    ux = 0;
+                if abs(rawx - 512) < 20 
+                   
                     x1start(2) = 0;
 
                 elseif p1dashbtn == 0 && p1crouchbtn == 1 
@@ -195,8 +195,8 @@ while ishandle(run)
                     u2y = 0;
                 end
                 
-                if abs(rawx2 - 512) < 20 && p1jabbtn == 1
-                    u2x = 0;
+                if abs(rawx2 - 512) < 20 
+                    
                     x2start(2) = 0;
                 
                 elseif p2dashbtn == 0 && p2crouchbtn == 1 
@@ -214,8 +214,8 @@ h2 = 1.0+(100.0-health2)*0.05;
 
 % ----- RK4 Integration -----
 y1start = RK4(y1start, dt, h1, uy,m, rho, Cd, A, g);
-x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A);
-x2start = RK4x(x2start, dt, h2, u2x, m, rho, Cd, A);
+x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A, g);
+x2start = RK4x(x2start, dt, h2, u2x, m, rho, Cd, A, g);
 y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
   
     if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
@@ -352,13 +352,17 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
         hit = jabfunction(x1, y1, x2, y2, up, hitbox);
     
         if hit > 0
-            u2x = ux*(abs(ux)/(abs(ux)+0.001));
+            u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
     
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
+        
     
         end
+
+    else 
+        u2x = 0;
     end
     
     
@@ -368,13 +372,15 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
         hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
     
         if hit2 > 0
-            ux = u2x*(abs(u2x)/(abs(u2x)+0.001));
+            ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
     
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
             burnt = 0.1 + health1/111.11;
     
         end
+     else 
+        ux = 0;
     end
             
     blackw1 = 1.000001 - health1/100;
@@ -436,14 +442,14 @@ end
 
 
 
-function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A)
+function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A, g)
     w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
     a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
 
-    k1=dt*fx(x, h, ux, m, rho, Cd, A);
-    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A);
-    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A);
-    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A);
+    k1=dt*fx(x, h, ux, m, rho, Cd, A, g);
+    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A, g);
+    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A, g);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A, g);
 
     x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
 end
@@ -471,14 +477,14 @@ function dxdt = f(y, h, uy,m, rho, Cd, A, g)
     dxdt(2) = (uy - F_drag - g*m) / m; 
 end
  
-function dxdtx = fx(x, h, ux, m, rho, Cd, A)
+function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
  
     
  
     dxdtx = zeros(2,1);
- 
+
+     vx = x(2);
     
-    vx = x(2); 
     
     % Quadratic drag
     F_dragx = 0.5 * rho * Cd * A * vx * abs(vx) * h;
