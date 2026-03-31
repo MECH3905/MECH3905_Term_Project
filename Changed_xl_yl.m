@@ -17,12 +17,12 @@ F_drag = 0;      % player 1 y-component initial drag force
 F_dragx = 0;     % player 1 x-component initial drag force
 F_dragx2 = 0;    % player 2 x-component initial drag force
 F_drag2 = 0;     % player 2 y-component initial drag force
-eq = 0.1;
+eq = 10;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj1 = serialport("COM4",115200);   % Player 1
-arduinoObj2 = serialport("COM5",115200);   % Player 2
+arduinoObj2 = serialport("COM7",115200);   % Player 2
 
 pause(5)
 
@@ -47,8 +47,8 @@ yl = bgHeight*100;   % absolute y scaling
 
 xstart = [0;0];       % initializing player 1 x position and velocity
 ystart = [0;0];       % initializing player 1 x position and velocity
-x2start = [0:0];
-y2start = [0:0];
+x2start = [0;0];
+y2start = [0;0];
 
 xp2 = [0;0];     % initializing player 2 x position and velocity
 
@@ -79,6 +79,10 @@ burnt = 1;
 
 p1jabbtn = 1;
 
+%% Background Sound
+[y, Fs] = audioread('Guile_theme.wav');
+backgroundsound = audioplayer(y, Fs);
+play(backgroundsound);
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
@@ -330,7 +334,7 @@ while ishandle(run)
     drawnow limitrate
 
     if health <= 0
-        
+        stop(backgroundsound);
         close all % close figure window once guy is super toasted
 
     end
