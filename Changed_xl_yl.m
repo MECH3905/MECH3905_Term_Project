@@ -80,7 +80,7 @@ burnt = 1;
 p1jabbtn = 1;
 
 %% Background Sound
-[y, Fs] = audioread('Guile_theme.wav');
+[y, Fs] = audioread('Guile_theme.mp3');
 backgroundsound = audioplayer(y, Fs);
 play(backgroundsound);
 %% ---------------- MAIN LOOP ----------------
