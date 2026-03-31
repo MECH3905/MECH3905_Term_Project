@@ -102,6 +102,7 @@ u2x = 0;
 %% Background Sound
 [y, Fs] = audioread('Guile_theme.mp3');
 backgroundsound = audioplayer(y, Fs);
+backgroundsound.Volume = 0.5;
 play(backgroundsound);
 
 %%load jab sound 
