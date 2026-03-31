@@ -21,8 +21,8 @@ eq = 1;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj1 = serialport("COM4",115200);   % Player 1
-arduinoObj2 = serialport("COM7",115200);   % Player 2
+arduinoObj1 = serialport("COM4",2000000);   % Player 1
+arduinoObj2 = serialport("COM7",2000000);   % Player 2
 
 pause(5)
 
@@ -61,10 +61,11 @@ dt = 0.02;       % time step
 screenx = 0.25;  % initial x position 
 screeny = 0.1;  % initial y position 
 
+dhb_fullwidth = 0.18;
 
 %% Initializing Images
 HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
-DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - hb_height, dhb_top], 'AlphaData', alphadhb);
+DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_fullwidth], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
 
 burntrun = image(burnt_m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_burnt_run);
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
@@ -327,17 +328,18 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     
         
     blackw = 1.000001 - health/100;
-    dhb_width  = 0.18*blackw;
-
+    current_width = dhb_width * blackw;
     %% ----- Update Ball -----
 
     set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1],'AlphaData',player1image{4});
     set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
 
-    set(DHB, 'XData',[dhb_left dhb_left+dhb_width], 'YData',[hb_top - hb_height hb_top], 'AlphaData', alphadhb);
-
-    set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
+   
+    dhb_right = dhb_left + dhb_width;
     
+    set(DHB, 'XData',[dhb_right - current_width, dhb_right], 'YData',[dhb_top - dhb_height dhb_top], 'AlphaData', alphadhb);
+    set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
+        
     drawnow limitrate
 
     if health <= 0
@@ -554,11 +556,11 @@ scale = 200/imgW;
     hb_left   = 0.03;   
     hb_top    = 0.923;  
   
-    blackw = 0.000001;
-    dhb_width  = 0.18*blackw;   
-    dhb_height = 0.06;   
-    dhb_left   = 0.01;   
-    dhb_top    = 0.97;  
+
+    dhb_width  = 0.2375;   
+    dhb_height = 0.0922;   
+    dhb_left   = 0.1796;   
+    dhb_top    = 0.895;  
 end
 
 
