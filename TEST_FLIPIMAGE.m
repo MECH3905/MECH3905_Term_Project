@@ -37,7 +37,7 @@ flush(arduinoObj2);
 [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
  m_crouch, alpha_crouch, m_jab, alpha_jab, ...
  m_upward_jab, alpha_upward_jab, ...
- scale,Health_Bar,alphahb,Black_HB,alphadhb,...
+ scale,P1_HB,alphaP1,P2_HB,alphaP2,Black_HB,alphadhb,...
  hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ...
  m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,...
  alpha_crouchflip,m_jabflip,alpha_jabflip,m_upward_jabflip,alpha_upward_jabflip,...
@@ -64,8 +64,12 @@ screeny = 0.1;  % initial y position
 dhb_fullwidth = 0.18;
 
 %% Initializing Images
-HB = image(Health_Bar, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphahb);
-DHB = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_fullwidth], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP1);
+HB2 = image(P2_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
+
+DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_fullwidth], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
+
 
 burntrun = image(burnt_m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_burnt_run);
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
@@ -74,7 +78,9 @@ p2run = image(m_runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[
 
 %% Initial Values
 
-health = 100;
+health1 = 100;
+health2 = 100;
+
 heart = 0;
 burnt = 1;
 crouch = 1;
@@ -190,7 +196,7 @@ while ishandle(run)
                 if u2x == 0
                     xp2(2) = 0;
                 end
-h = 1.0+(100.0-health)*0.01;
+h = 1.0+(100.0-health1)*0.01;
 
 % ----- RK4 Integration -----
 y1start = RK4(y1start, dt, h, uy,m, rho, Cd, A, g);
@@ -302,34 +308,45 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     end
 
     %% Player hit and damage function
-    if p1jabbtn == 0 && p1crouchbtn ==1 % make punch crouch and jump into functions add dash
-        
-    if p2jabbtn == 0 && p2crouchbtn == 1
-
-    hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
-
-    if hit2 > 0
-        ux = (abs(u2x)/2)*(u2x/(abs(u2x)+0.001));
-    end
+%% Player hit and damage function
     
-    end    
+    % playuer 1 hits player 2 
+    if p1jabbtn == 0 && p1crouchbtn == 1
+    
         hit = jabfunction(x1, y1, x2, y2, up, hitbox);
-
+    
         if hit > 0
             u2x = (abs(ux)/2)*(ux/(abs(ux)+0.001));
-
-            heart =  (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
-            health = health - heart*hit;
-
-            burnt = 0.25 + health/133.33;
-        end
-
-    end  
     
-        
-    blackw = 1.000001 - health/100;
-    current_width = dhb_width * blackw;
-    %% ----- Update Ball -----
+            heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
+            health2 = health2 - heart;
+    
+        end
+    end
+    
+    
+    % playuer 2 hits player 1
+    if p2jabbtn == 0 && p2crouchbtn == 1
+    
+        hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
+    
+        if hit2 > 0
+            ux = (abs(u2x)/2)*(u2x/(abs(u2x)+0.001));
+    
+            heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
+            health1 = health1 - heart2;
+    
+        end
+    end
+            
+    blackw1 = 1.000001 - health1/100;
+    dhb_width1 = 0.18*blackw1;
+    
+    blackw2 = 1.000001 - health2/100;
+    dhb_width2 = 0.18*blackw2;
+    current_width1 = dhb_width1;    
+    
+    %% player 1 damage bar
 
     set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1],'AlphaData',player1image{4});
     set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
@@ -337,13 +354,17 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
    
     dhb_right = dhb_left + dhb_width;
     
-    set(DHB, 'XData',[dhb_right - current_width, dhb_right], 'YData',[dhb_top - dhb_height dhb_top], 'AlphaData', alphadhb);
+    set(DHB1, 'XData',[dhb_right - current_width1, dhb_right], 'YData',[dhb_top - dhb_height dhb_top], 'AlphaData', alphadhb);
     set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
-        
+    
+    % player 1 damage bar
+    
+    set(DHB2, 'XData',[bgWidth-0.01-dhb_width2 bgWidth-0.01], 'YData',[0.97-0.06 0.97]);
+
     drawnow limitrate
 
-    if health <= 0
-        
+    if health1 <= 0 || health2 <= 0
+    
         close all % close figure window once guy is super toasted
 
     end
@@ -453,7 +474,7 @@ end
 function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab, ...
-          scale,Health_Bar,alphahb,Black_HB,alphadhb,...
+          scale,P1_HB,alphaP1,P2_HB,alphaP2,Black_HB,alphadhb,...
           hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
           m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, ...
@@ -542,11 +563,13 @@ alpha_upward_jabflip = rot90(alpha_upward_jabflip,2);
 % Object scale (normalized)
 scale = 200/imgW;
     
-    [Health_Bar,~,alphahb] = imread('P1_Health.png');
+    [P1_HB,~,alphaP1] = imread('P1_Health.png');
+    P1_HB = flipud(P1_HB);
+    alphaP1 = flipud(alphaP1);
     
-    Health_Bar = flipud(Health_Bar);
-
-    alphahb = flipud(alphahb);
+    [P2_HB,~,alphaP2] = imread('P2_Health.png');
+    P2_HB = flipud(P2_HB);
+    alphaP2 = flipud(alphaP2);
 
     [Black_HB,~,alphadhb] = imread('Black_HB.png');
     alphadhb = flipud(alphadhb);
