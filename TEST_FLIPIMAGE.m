@@ -44,7 +44,9 @@ flush(arduinoObj2);
           Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip,p2_left,dhb_right,p2_dhb_left, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip] = figure_setup();
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip] = figure_setup();
 
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
@@ -79,6 +81,7 @@ DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0
 burntrun = image(Roasted_Run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Run);
 run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
 
+burntrun2 = image(Roasted_Runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Runflip);
 p2run = image(m_runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
 
 %% Initial Values
@@ -91,6 +94,9 @@ burnt = 1;
 burnt2 = 1;
 crouch = 1;
 p1jabbtn = 1;
+
+ux = 0;
+u2x = 0;
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
@@ -147,30 +153,29 @@ while ishandle(run)
                         
                     uy = 800*(0.15+0.85*p1crouchbtn);
 
-                elseif p1dashbtn == 0
+                elseif p1dashbtn == 0 && p1crouchbtn == 1
 
-                    uy = 400*(raw-512)*(0.15+0.85*p1crouchbtn)/512;
+                    uy = -400*(raw-512)/512;
                     
                 else
                     uy = 0;  % Reset applied force if within deadband
                 end
 
                 % Deadband
-                if abs(rawx - 512) < 20
+                if abs(rawx - 512) < 20 && p2jabbtn == 1
                     ux = 0;
+                    x1start(2) = 0;
 
-                elseif p1dashbtn == 0
+                elseif p1dashbtn == 0 && p1crouchbtn == 1
 
-                    ux = -3000*(rawx-512)*(0.15+0.85*p1crouchbtn)/512;
+                    ux = -3000*(rawx-512)/512;
                     
                 else 
                     ux = -(rawx - 512)*(0.15+0.85*p1crouchbtn);
                     
                 end 
                                 
-                 if ux == 0 
-                    x1start(2) = 0;
-                end
+                 
             
             % player 2 controls
                 if (raw2 - 512) < -300
@@ -182,30 +187,29 @@ while ishandle(run)
                 if p2jumpbtn == 0
                     u2y = 800*(0.15+0.85*p2crouchbtn);
                 
-                elseif p2dashbtn == 0
-                    u2y = 400*(raw2-512)*(0.15+0.85*p2crouchbtn)/512;
+                elseif p2dashbtn == 0 && p2crouchbtn == 1
+                    u2y = -400*(raw2-512)/512;
                 
                 else
                     u2y = 0;
                 end
                 
-                if abs(rawx2 - 512) < 10
+                if abs(rawx2 - 512) < 20 && p1jabbtn == 1
                     u2x = 0;
+                    xp2(2) = 0;
                 
-                elseif p2dashbtn == 0
-                    u2x = -3000*(rawx2-512)*(0.15+0.85*p2crouchbtn)/512;
+                elseif p2dashbtn == 0 && p2crouchbtn == 1
+                    u2x = -3000*(rawx2-512)/512;
                 
                 else
                     
                     u2x = -(rawx2 - 512)*(0.15+0.85*p2crouchbtn);
                 end
                 
-                if u2x == 0
-                    xp2(2) = 0;
-                end
+                
 
-h1 = 1.0+(100.0-health1)*0.01;
-h2 = 1.0+(100.0-health2)*0.01;
+h1 = 1.0+(100.0-health1)*0.05;
+h2 = 1.0+(100.0-health2)*0.05;
 
 % ----- RK4 Integration -----
 y1start = RK4(y1start, dt, h1, uy,m, rho, Cd, A, g);
@@ -283,48 +287,58 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
    
     if x1 <= x2
         
-        player1image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player1image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip);
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
 
         set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
         set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-        player2image = changeimageflip(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player2image = changeimageflip(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, p2dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip);
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
 
         set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+        set(burntrun2,'CData', player2image{3}, 'AlphaData', player2image{4});
 
     else
-        player1image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player1image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip);
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
 
         set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
         set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-        player2image = changeimage(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player2image = changeimage(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, p2dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run,Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip);
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
 
         set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+        set(burntrun2,'CData', player2image{3}, 'AlphaData', player2image{4});
 
     end
 
@@ -337,11 +351,11 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
         hit = jabfunction(x1, y1, x2, y2, up, hitbox);
     
         if hit > 0
-            u2x = (abs(ux)/2)*(ux/(abs(ux)+0.001));
+            u2x = (abs(ux))*(ux/(abs(ux)+0.001));
     
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
-            burnt2 = 0.25 + health2/133.33;
+            burnt2 = 0.1 + health2/111.11;
     
         end
     end
@@ -353,11 +367,11 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
         hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
     
         if hit2 > 0
-            ux = (abs(u2x)/2)*(u2x/(abs(u2x)+0.001));
+            ux = (abs(u2x))*(u2x/(abs(u2x)+0.001));
     
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
-            burnt = 0.25 + health1/133.33;
+            burnt = 0.1 + health1/111.11;
     
         end
     end
@@ -371,20 +385,23 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     
     %% player 1 damage bar
 
-    set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1],'AlphaData',player1image{4});
+    set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
     set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
 
    
     
     
     set(DHB1, 'XData',[dhb_right - dhb_width1, dhb_right], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+
+    
+    set(burntrun2,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]);
     set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
     
     % player 1 damage bar
     
 
 
-set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
+    set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
 
     drawnow limitrate
 
@@ -506,7 +523,9 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip,p2_left,dhb_right,p2_dhb_left,...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip] = figure_setup()
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip] = figure_setup()
 
  
 
@@ -620,6 +639,24 @@ alpha_Roasted_Upwards_Jab = flipud(alpha_Roasted_Upwards_Jab);
 Roasted_Upwards_Jabflip = rot90(Roasted_Upwards_Jabflip,2);
 alpha_Roasted_Upwards_Jabflip = rot90(alpha_Roasted_Upwards_Jabflip,2);
 
+[Unroasted_Dash,~,alpha_upward_Unroasted_Dash] = imread('Unroasted_Dash.png');
+Unroasted_Dash = flipud(Unroasted_Dash);
+alpha_upward_Unroasted_Dash = flipud(alpha_upward_Unroasted_Dash);
+
+[Unroasted_Dashflip,~,alpha_Unroasted_Dashflip] = imread('Unroasted_Dash.png');
+Unroasted_Dashflip = rot90(Unroasted_Dashflip,2);
+alpha_Unroasted_Dashflip = rot90(alpha_Unroasted_Dashflip,2);
+
+[Roasted_Dash,~,alpha_Roasted_Dash] = imread('Roasted_Dash.png');
+Roasted_Dash = flipud(Roasted_Dash);
+alpha_Roasted_Dash = flipud(alpha_Roasted_Dash);
+
+[Roasted_Dashflip,~,alpha_Roasted_Dashflip] = imread('Roasted_Dash.png');
+Roasted_Dashflip = rot90(Roasted_Dashflip,2);
+alpha_Roasted_Dashflip = rot90(alpha_Roasted_Dashflip,2);
+
+
+
 % Object scale (normalized)
 scale = 200/imgW;
     
@@ -675,13 +712,15 @@ function jab = jabfunction(x1, y1, x2, y2, up, hitbox)
 end
 
 
-function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip)
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_upward_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
 
     
  if ux >= 0 
@@ -707,11 +746,17 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_
             image{4} = alpha_Roasted_Jab;
         end
     
-    elseif p1jumpbtn == 0
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
         image{1} = m_jump;
         image{2}= alpha_jump*burnt;
         image{3} = Roasted_Jump;
         image{4} = alpha_Roasted_Jump;
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dash;
+        image{2}= alpha_upward_Unroasted_Dash*burnt;
+        image{3} = Roasted_Dash;
+        image{4} = alpha_Roasted_Dash;
 
     else
         image{1} = m_run;
@@ -743,12 +788,18 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_
             image{4} = alpha_Roasted_Jabflip;
         end
     
-    elseif p1jumpbtn == 0
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
         image{1} = m_jumpflip;
         image{2}= alpha_jumpflip*burnt;
         image{3} = Roasted_Jumpflip;
         image{4} = alpha_Roasted_Jumpflip;
-        
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dashflip;
+        image{2}= alpha_upward_Unroasted_Dashflip*burnt;
+        image{3} = Roasted_Dashflip;
+        image{4} = alpha_Roasted_Dashflip;
+
     else
         image{1} = m_runflip;
         image{2} = alpha_runflip*burnt;
@@ -761,13 +812,15 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_
  
 end
 
-function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
-          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip)
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_upward_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
 
     
 
@@ -793,12 +846,17 @@ function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn
             image{4} = alpha_Roasted_Jabflip;
         end
     
-    elseif p1jumpbtn == 0
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
         image{1} = m_jumpflip;
         image{2}= alpha_jumpflip*burnt;
         image{3} = Roasted_Jumpflip;
         image{4} = alpha_Roasted_Jumpflip;
-        
+
+     elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dashflip;
+        image{2}= alpha_upward_Unroasted_Dashflip*burnt;
+        image{3} = Roasted_Dashflip;
+        image{4} = alpha_Roasted_Dashflip;
     else
         image{1} = m_runflip;
         image{2} = alpha_runflip*burnt;
@@ -836,6 +894,12 @@ function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn
         image{2}= alpha_jump*burnt;
         image{3} = Roasted_Jump;
         image{4} = alpha_Roasted_Jump;
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dash;
+        image{2}= alpha_upward_Unroasted_Dash*burnt;
+        image{3} = Roasted_Dash;
+        image{4} = alpha_Roasted_Dash;
 
     else
         image{1} = m_run;
