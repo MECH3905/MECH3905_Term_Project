@@ -358,7 +358,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     
         if hit > 0
             u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
-    
+            
+            % jab Sound
+            [y, Fs] = audioread('jab_oof.mp3');
+            Jab_sound = audioplayer(y, Fs);
+            play(Jab_sound);
+
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
@@ -378,7 +383,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     
         if hit2 > 0
             ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
-    
+            
+            % jab Sound
+            [y, Fs] = audioread('jab_oof.mp3');
+            Jab_sound = audioplayer(y, Fs);
+            play(Jab_sound);
+            
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
             burnt = 0.1 + health1/111.11;
