@@ -539,21 +539,20 @@ alpha_upward_jabflip = rot90(alpha_upward_jabflip,2);
 
 % Object scale (normalized)
 scale = 200/imgW;
- 
     
-  [Health_Bar,~,alphahb] = imread('Health_Bar.png');
-    Health_Bar = rot90(Health_Bar,2);
+    [Health_Bar,~,alphahb] = imread('P1_Health.png');
     
+    Health_Bar = flipud(Health_Bar);
 
     alphahb = flipud(alphahb);
 
     [Black_HB,~,alphadhb] = imread('Black_HB.png');
     alphadhb = flipud(alphadhb);
     
-    hb_width  = 0.18;   
-    hb_height = 0.06;   
-    hb_left   = 0.01;   
-    hb_top    = 0.97;  
+    hb_width  = 0.45;   
+    hb_height = 0.15;   
+    hb_left   = 0.03;   
+    hb_top    = 0.923;  
   
     blackw = 0.000001;
     dhb_width  = 0.18*blackw;   
