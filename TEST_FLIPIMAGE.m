@@ -99,6 +99,11 @@ ux = 0;
 u2x = 0;
 
 
+%% Background Sound
+[y, Fs] = audioread('Guile_theme.wav');
+backgroundsound = audioplayer(y, Fs);
+play(backgroundsound);
+
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
  
@@ -414,6 +419,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
 
     if health1 <= 0 || health2 <= 0
         
+        stop(backgroundsound);
         break
         %close all % close figure window once guy is super toasted
 
