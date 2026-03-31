@@ -22,7 +22,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj1 = serialport("COM4",2000000);   % Player 1
-arduinoObj2 = serialport("COM7",2000000);   % Player 2
+arduinoObj2 = serialport("COM3",2000000);   % Player 2
 
 pause(5)
 
@@ -41,7 +41,7 @@ flush(arduinoObj2);
  hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top, ...
  m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip,m_crouchflip,...
  alpha_crouchflip,m_jabflip,alpha_jabflip,m_upward_jabflip,alpha_upward_jabflip,...
- burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip] = figure_setup();
+ burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip,p2_left,dhb_right,p2_dhb_left] = figure_setup();
 
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
@@ -61,14 +61,15 @@ dt = 0.02;       % time step
 screenx = 0.25;  % initial x position 
 screeny = 0.1;  % initial y position 
 
-dhb_fullwidth = 0.18;
+
 
 %% Initializing Images
-HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP1);
-p2_left = bgWidth - hb_left - hb_width;
+HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height+0.0027, hb_top], 'AlphaData', alphaP1);
+
 HB2 = image(P2_HB, 'XData',[p2_left, p2_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
 
-DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_fullwidth], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+
+DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
 DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
 
 
@@ -84,6 +85,7 @@ health2 = 100;
 
 heart = 0;
 burnt = 1;
+burnt2 = 1;
 crouch = 1;
 p1jabbtn = 1;
 
@@ -130,7 +132,7 @@ while ishandle(run)
         p2jabbtn = num2(7);
     end
                 % Deadband
-                if (raw - 512) > 300
+                if (raw - 512) <-300
                         
                     up = 0;
                 
@@ -168,7 +170,7 @@ while ishandle(run)
                 end
             
             % player 2 controls
-                if (raw2 - 512) > 300
+                if (raw2 - 512) < -300
                     up2 = 0;
                 else
                     up2 = 1;
@@ -184,26 +186,29 @@ while ishandle(run)
                     u2y = 0;
                 end
                 
-                if abs(rawx2 - 512) < 20
+                if abs(rawx2 - 512) < 10
                     u2x = 0;
                 
                 elseif p2dashbtn == 0
                     u2x = -3000*(rawx2-512)*(0.15+0.85*p2crouchbtn)/512;
                 
                 else
+                    
                     u2x = -(rawx2 - 512)*(0.15+0.85*p2crouchbtn);
                 end
                 
                 if u2x == 0
                     xp2(2) = 0;
                 end
-h = 1.0+(100.0-health1)*0.01;
+
+h1 = 1.0+(100.0-health1)*0.01;
+h2 = 1.0+(100.0-health2)*0.01;
 
 % ----- RK4 Integration -----
-y1start = RK4(y1start, dt, h, uy,m, rho, Cd, A, g);
-x1start = RK4x(x1start, dt, h, ux, m, rho, Cd, A, eq);
-xp2 = RK4x2(xp2, dt, h, u2x, m, rho, Cd, A, eq);
-y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
+y1start = RK4(y1start, dt, h1, uy,m, rho, Cd, A, g);
+x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A, eq);
+xp2 = RK4x2(xp2, dt, h2, u2x, m, rho, Cd, A, eq);
+y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
   
     if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
          
@@ -283,7 +288,7 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
         set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
         set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-        player2image = changeimageflip(u2x, up2, burnt, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player2image = changeimageflip(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
@@ -299,7 +304,7 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
         set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
         set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
 
-        player2image = changeimage(u2x, up2, burnt, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+        player2image = changeimage(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
           m_crouch, alpha_crouch, m_jab, alpha_jab, ...
           m_upward_jab, alpha_upward_jab,burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip);
@@ -321,6 +326,7 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
+            burnt2 = 0.25 + health2/133.33;
     
         end
     end
@@ -336,16 +342,17 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
+            burnt = 0.25 + health1/133.33;
     
         end
     end
             
     blackw1 = 1.000001 - health1/100;
-    dhb_width1 = 0.18*blackw1;
+    dhb_width1 = dhb_width*blackw1+(0.003*(1-health1/100));
     
     blackw2 = 1.000001 - health2/100;
-    dhb_width2 = 0.18*blackw2;
-    current_width1 = dhb_width1;    
+    dhb_width2 = dhb_width*blackw2;
+    %current_width1 = dhb_width1;    
     
     %% player 1 damage bar
 
@@ -353,21 +360,21 @@ y2start = RK4(y2start, dt, h, u2y, m, rho, Cd, A, g);
     set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
 
    
-    dhb_right = dhb_left + dhb_width;
     
-    set(DHB1, 'XData',[dhb_right - current_width1, dhb_right], 'YData',[dhb_top - dhb_height dhb_top], 'AlphaData', alphadhb);
+    
+    set(DHB1, 'XData',[dhb_right - dhb_width1, dhb_right], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
     set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
     
     % player 1 damage bar
     
-p2_dhb_left = bgWidth - dhb_left - dhb_width;
 
-set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height dhb_top]);
+
+set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
 
     drawnow limitrate
 
     if health1 <= 0 || health2 <= 0
-    
+        
         close all % close figure window once guy is super toasted
 
     end
@@ -481,7 +488,7 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
           m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
           m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, ...
-          burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip] = figure_setup()
+          burnt_m_run,alpha_burnt_run, burnt_m_runflip,alpha_burnt_runflip,p2_left,dhb_right,p2_dhb_left] = figure_setup()
 
  
 
@@ -579,14 +586,19 @@ scale = 200/imgW;
     
     hb_width  = 0.45;   
     hb_height = 0.15;   
-    hb_left   = 0.03;   
+    hb_left   = 0.028;   
     hb_top    = 0.923;  
   
 
-    dhb_width  = 0.2375;   
-    dhb_height = 0.0922;   
-    dhb_left   = 0.1796;   
-    dhb_top    = 0.895;  
+    dhb_width  = 0.23;   
+    dhb_height = 0.08745;   
+    dhb_left   = 0.182;   
+    dhb_top    = 0.8935;  
+
+    p2_left = bgWidth - hb_left - hb_width;
+
+    dhb_right = dhb_left + dhb_width;
+    p2_dhb_left = bgWidth - dhb_left - dhb_width;
 end
 
 
