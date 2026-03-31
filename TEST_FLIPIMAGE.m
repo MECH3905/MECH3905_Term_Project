@@ -156,10 +156,10 @@ while ishandle(run)
 
                 elseif p1dashbtn == 0
 
-                    ux = 3000*(rawx-512)*(0.15+0.85*p1crouchbtn)/512;
+                    ux = -3000*(rawx-512)*(0.15+0.85*p1crouchbtn)/512;
                     
                 else 
-                    ux = (rawx - 512)*(0.15+0.85*p1crouchbtn);
+                    ux = -(rawx - 512)*(0.15+0.85*p1crouchbtn);
                     
                 end 
                                 
