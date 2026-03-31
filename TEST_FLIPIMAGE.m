@@ -100,7 +100,7 @@ u2x = 0;
 
 
 %% Background Sound
-[y, Fs] = audioread('Guile_theme.wav');
+[y, Fs] = audioread('Guile_theme.mp3');
 backgroundsound = audioplayer(y, Fs);
 play(backgroundsound);
 
@@ -360,8 +360,8 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
             
             % jab Sound
-            [y, Fs] = audioread('jab_oof.mp3');
-            Jab_sound = audioplayer(y, Fs);
+            [sound, poop] = audioread('jab_oof.mp3');
+            Jab_sound = audioplayer(sound, poop);
             play(Jab_sound);
 
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
@@ -385,9 +385,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
             
             % jab Sound
-            [y, Fs] = audioread('jab_oof.mp3');
-            Jab_sound = audioplayer(y, Fs);
-            play(Jab_sound);
+            
             
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
@@ -429,14 +427,14 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
 
     if health1 <= 0 || health2 <= 0
         
-        stop(backgroundsound);
+       
         break
         %close all % close figure window once guy is super toasted
 
     end
 
 end
-     
+stop(backgroundsound);     
 clear arduinoObj1
 clear arduinoObj2
 
@@ -697,7 +695,8 @@ function jab = jabfunction(x1, y1, x2, y2, up, hitbox)
 
     if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2      %if player 1 is to the left of player 2
 
-             hit = 1;                                             % 1 means he hit
+             hit = 1;
+             % 1 means he hit
 
     elseif x1 > x2 && (x1 - hitbox) < x2 && y1 <y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2   %if player 1 is to the right of player 2
 
