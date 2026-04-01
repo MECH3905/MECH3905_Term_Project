@@ -755,7 +755,7 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
           Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
           Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
-          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win)
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
 
     
  if ux >= 0 
@@ -831,7 +831,7 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1
 
     elseif p1dashbtn == 0 && p1crouchbtn == 1
         image{1} = Unroasted_Dashflip;
-        image{2}= alpha_upward_Unroasted_Dashflip*burnt;
+        image{2}= alpha_Unroasted_Dashflip*burnt;
         image{3} = Roasted_Dashflip;
         image{4} = alpha_Roasted_Dashflip;
 
