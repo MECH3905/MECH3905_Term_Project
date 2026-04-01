@@ -22,7 +22,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
 arduinoObj1 = serialport("COM4",2000000);   % Player 1
-arduinoObj2 = serialport("COM3",2000000);   % Player 2
+arduinoObj2 = serialport("COM7",2000000);   % Player 2
 
 pause(5)
 
@@ -72,7 +72,6 @@ screeny = 0.1;  % initial y position
 HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height+0.0027, hb_top], 'AlphaData', alphaP1);
 
 HB2 = image(P2_HB, 'XData',[p2_left, p2_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
-
 
 DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
 DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
@@ -448,13 +447,16 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     drawnow limitrate
     
     if health1 <= 0 || health2 <= 0
-        
-       
+    
+        if health1 <= 0
+            showWinScreen(2); % player 2 wins
+        else
+            showWinScreen(1); % player 1 wins
+        end
+    
         break
-        %close all % close figure window once guy is super toasted
-
+    
     end
-
 end
 stop(backgroundsound);     
 clear arduinoObj1
@@ -935,4 +937,24 @@ function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn
     end
     
 end
- end
+end
+
+function showWinScreen(winner)
+    clf; 
+
+    if winner == 1
+        img = imread('p1_win.png'); % player 1 win image
+    else
+        img = imread('p2_win.png'); % player 2 win image
+    end
+
+    imshow(img)
+    axis off
+    drawnow;
+
+    while true
+        pause(10);
+    end
+
+end
+
