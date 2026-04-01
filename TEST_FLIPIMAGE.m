@@ -1,8 +1,7 @@
-
-
 clear all
 close all
 clc
+
 
 % Declare global variables 
 
@@ -26,11 +25,13 @@ arduinoObj2 = serialport("COM7",2000000);   % Player 2
 
 pause(5)
 
+
 configureTerminator(arduinoObj1,"CR/LF");
 configureTerminator(arduinoObj2,"CR/LF");
 
 flush(arduinoObj1);
 flush(arduinoObj2);
+
 
 
 %% ---------------- FIGURE SETUP ----------------
@@ -97,16 +98,14 @@ p1jabbtn = 1;
 ux = 0;
 u2x = 0;
 
-
-
+[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
  y0 = 0.1*y0;
- leep= 1.1*leep;
  backgroundsound = audioplayer(y0, leep);
  play(backgroundsound);
-%%load jab sound 
 
+ %%load jab sound 
 
 [y, Fs] = audioread('jab_oof.mp4');
 Fs = 1.75*Fs;
@@ -115,6 +114,8 @@ Jab_sound = audioplayer(y, Fs);
 [y, Fs] = audioread('jab_oof.mp4');
 Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
+
+
 
 
 %% ---------------- MAIN LOOP ----------------
@@ -975,10 +976,69 @@ function showWinScreen(winner, p1_win, p2_win, backgroundsound, Jab_sound, Jab_s
    image('CData', img, 'XData',[0 axW], 'YData',[0 axH]);
 
     axis image
-    set(gca, 'YDir', 'normal');   % <-- ADD THIS LINE
+    set(gca, 'YDir', 'normal');
     xlim([0 axW])
     ylim([0 axH])
         drawnow;
  
     waitfor(gcf);
+end
+
+function [name1, name2] = startScreen()
+
+    fig = figure('WindowState','maximized', 'Toolbar','none', 'MenuBar','none', 'Color','k');
+
+    bg = imread('Player1_Wins.jpg');
+    bg = flipud(bg);
+    [imgH, imgW, ~] = size(bg);
+    imgRatio = imgW / imgH;
+
+    axH = 1;
+    axW = imgRatio;
+    axX = (1 - axW) / 2;
+    axY = 0;
+
+    ax = axes('Position',[axX axY axW axH]);
+    hold on
+    axis off
+    image('CData', bg, 'XData',[0 imgRatio], 'YData',[0 1]);
+    axis image
+    set(gca, 'YDir', 'normal');
+    xlim([0 imgRatio])
+    ylim([0 1])
+
+    % Player 1 box
+    p1box = uicontrol('Style','edit', ...
+        'Units','normalized', ...
+        'Position',[0.25 0.58 0.1 0.05], ...
+        'String','Player 1', ...
+        'FontSize',14, ...
+        'BackgroundColor',[0.4 0.2 0.1], ...
+        'ForegroundColor','white');
+    
+    % Player 2 box
+    p2box = uicontrol('Style','edit', ...
+        'Units','normalized', ...
+        'Position',[0.65 0.58 0.1 0.05], ...
+        'String','Player 2', ...
+        'FontSize',14, ...
+        'BackgroundColor','black', ...
+        'ForegroundColor','white');
+        
+    % Start hitbox
+    uicontrol('Style','pushbutton', ...
+        'Units','normalized', ...
+        'Position',[0.45 0.45 0.1 0.05], ...
+        'String','', ...
+        'BackgroundColor','none', ...
+        'BorderType','none', ...
+        'Callback', @(~,~) uiresume(fig));
+
+    uiwait(fig);
+
+    name1 = get(p1box, 'String');
+    name2 = get(p2box, 'String');
+
+    close(fig);
+
 end
