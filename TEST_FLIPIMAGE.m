@@ -115,8 +115,9 @@ Jab_sound = audioplayer(y, Fs);
 Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
 
-
-
+%% Player Text namse 
+nameText1 = text(0, 0, name1, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
+nameText2 = text(0, 0, name2, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
@@ -308,6 +309,9 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     elseif y2 < screeny
         y2 = screeny;
     end
+
+    set(nameText1, 'Position', [x1, y1+scale+0.05, 0]);
+    set(nameText2, 'Position', [x2, y2+scale+0.05, 0]);
    
     %% replacing plyer images  
    
@@ -1031,7 +1035,6 @@ function [name1, name2] = startScreen()
         'Position',[0.45 0.45 0.1 0.05], ...
         'String','', ...
         'BackgroundColor','none', ...
-        'BorderType','none', ...
         'Callback', @(~,~) uiresume(fig));
 
     uiwait(fig);
