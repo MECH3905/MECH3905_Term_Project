@@ -46,7 +46,7 @@ flush(arduinoObj2);
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
           Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
           Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
-          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip] = figure_setup();
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win] = figure_setup();
 
 xl = bgWidth*100;    % absolute x scaling
 yl = bgHeight*100;   % absolute y scaling
@@ -449,9 +449,9 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     if health1 <= 0 || health2 <= 0
     
         if health1 <= 0
-            showWinScreen(2); % player 2 wins
+            showWinScreen(2, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2); % player 2 wins
         else
-            showWinScreen(1); % player 1 wins
+            showWinScreen(1, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2); % player 1 wins
         end
     
         break
@@ -551,7 +551,7 @@ function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
           Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
           Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
-          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip] = figure_setup()
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win] = figure_setup()
 
  
 
@@ -681,6 +681,13 @@ alpha_Roasted_Dash = flipud(alpha_Roasted_Dash);
 Roasted_Dashflip = rot90(Roasted_Dashflip,2);
 alpha_Roasted_Dashflip = rot90(alpha_Roasted_Dashflip,2);
 
+% win images 
+[p1_win,~,~] = imread('Player1_Wins.jpg');
+p1_win = flipud(p1_win);
+
+[p2_win,~,~] = imread('Player2_Wins.jpg');
+p2_win = flipud(p2_win);
+
 
 
 % Object scale (normalized)
@@ -746,8 +753,8 @@ function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1
           Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
           Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
           Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
-          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_upward_Unroasted_Dashflip, ...
-          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win)
 
     
  if ux >= 0 
@@ -939,22 +946,39 @@ function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn
 end
 end
 
-function showWinScreen(winner)
-    clf; 
+function showWinScreen(winner, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2)
 
+    stop(backgroundsound);
+    stop(Jab_sound);
+    stop(Jab_sound2);
+
+    clf;
+    set(gcf,'WindowState','maximized','Color','k');
     if winner == 1
-        img = imread('p1_win.png'); % player 1 win image
+        img = p1_win;
     else
-        img = imread('p2_win.png'); % player 2 win image
+        img = p2_win;
     end
 
-    imshow(img)
+    % Get image size
+    [imgH,imgW,~] = size(img);
+    imgRatio = imgW/imgH;
+
+    axH = 1;
+    axW = imgRatio;
+    axX = (1 - axW) / 2;
+    axY = 0;
+
+    ax = axes('Position',[axX axY axW axH]);
+    hold on
     axis off
-    drawnow;
+   image('CData', img, 'XData',[0 axW], 'YData',[0 axH]);
 
-    while true
-        pause(10);
-    end
-
+    axis image
+    set(gca, 'YDir', 'normal');   % <-- ADD THIS LINE
+    xlim([0 axW])
+    ylim([0 axH])
+        drawnow;
+ 
+    waitfor(gcf);
 end
-
