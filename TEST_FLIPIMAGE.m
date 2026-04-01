@@ -103,7 +103,7 @@ u2x = 0;
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
  y0 = 0.1*y0;
- leep= spd*leep;
+ leep= 1.1*leep;
  backgroundsound = audioplayer(y0, leep);
  play(backgroundsound);
 %%load jab sound 
@@ -165,7 +165,9 @@ while ishandle(run)
                 if (raw - 512) <-300
                         
                     up = 0;
-                
+
+                elseif (raw - 512) > 400
+                    p1crouchbtn = 0;
                 else 
                     up = 1;
                 end  
@@ -184,8 +186,8 @@ while ishandle(run)
 
                 % Deadband
                 if abs(rawx - 512) < 20 
-                   
-                    x1start(2) = 0;
+                    %ux = 0;
+                   % x1start(2) = 0;
 
                 elseif p1dashbtn == 0 && p1crouchbtn == 1 
 
@@ -201,6 +203,8 @@ while ishandle(run)
             % player 2 controls
                 if (raw2 - 512) < -300
                     up2 = 0;
+                elseif (raw2 - 512) > 400
+                    p2crouchbtn = 0;
                 else
                     up2 = 1;
                 end
@@ -217,7 +221,8 @@ while ishandle(run)
                 
                 if abs(rawx2 - 512) < 20 
                     
-                    x2start(2) = 0;
+                    %u2x = 0;
+                    %x2start(2) = 0;
                 
                 elseif p2dashbtn == 0 && p2crouchbtn == 1 
                     u2x = -3000*(rawx2-512)/512;
@@ -366,12 +371,30 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     %% Player hit and damage function
 %% Player hit and damage function
     
+ % playuer 2 hits player 1
+    if p2jabbtn == 0 && p2crouchbtn == 1 && p1crouchbtn == 1
+    
+        hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
+    
+        if hit2 == 1
+            ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
+            
+            % jab Sound
+
+            play(Jab_sound2);
+            
+
+            heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
+            health1 = health1 - heart2;
+            burnt = 0.1 + health1/111.11;
+        end
+        
     % playuer 1 hits player 2 
-    if p1jabbtn == 0 && p1crouchbtn == 1 &&  p2crouchbtn == 1
+    elseif p1jabbtn == 0 && p1crouchbtn == 1 &&  p2crouchbtn == 1
     
         hit = jabfunction(x1, y1, x2, y2, up, hitbox);
     
-        if hit > 0
+        if hit ==1
             u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
             
             % jab Sound
@@ -383,36 +406,15 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
         
-            
         end
 
-    else 
+    else
+        ux = 0; 
         u2x = 0;
     end
     
     
-    % playuer 2 hits player 1
-    if p2jabbtn == 0 && p2crouchbtn == 1 && p1crouchbtn == 1
-    
-        hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
-    
-        if hit2 > 0
-            ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
-            
-            % jab Sound
-
-            play(Jab_sound2);
-            
-
-            
-            heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
-            health1 = health1 - heart2;
-            burnt = 0.1 + health1/111.11;
-             
-        end
-     else 
-        ux = 0;
-    end
+   
     
    
 
@@ -514,7 +516,7 @@ end
 function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
  
     
- 
+    
     dxdtx = zeros(2,1);
 
      vx = x(2);
@@ -524,7 +526,10 @@ function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
     F_dragx = 0.5 * rho * Cd * A * vx * abs(vx) * h;
 
 
-    dxdtx(1) = vx;
+    
+    
+        dxdtx(1) = vx;
+    
     dxdtx(2) = (ux - F_dragx) / m;
 end
 

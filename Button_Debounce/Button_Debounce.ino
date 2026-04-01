@@ -1,8 +1,8 @@
 // Button Pins
-const int jumpPin = 8;
+const int jumpPin = 11;
 const int dashPin = 9;
-const int crouchPin = 10;
-const int jabPin = 11;
+const int crouchPin = 8;
+const int jabPin = 10;
 
 // Joystick Pins
 const int xPin = A0;
