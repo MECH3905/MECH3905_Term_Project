@@ -99,18 +99,28 @@ ux = 0;
 u2x = 0;
 
 
-%% Background Sound
-[y, Fs] = audioread('Guile_theme.mp3');
-backgroundsound = audioplayer(y, Fs);
-backgroundsound.Volume = 0.5;
-play(backgroundsound);
 
+%% Background Sound
+ [y0, leep] = audioread('Guile_theme.mp3');
+ y0 = 0.1*y0;
+ leep= spd*leep;
+ backgroundsound = audioplayer(y0, leep);
+ play(backgroundsound);
 %%load jab sound 
-[y, Fs] = audioread('jab_oof.mp3');
+
+
+[y, Fs] = audioread('jab_oof.mp4');
+Fs = 1.75*Fs;
 Jab_sound = audioplayer(y, Fs);
+
+[y, Fs] = audioread('jab_oof.mp4');
+Fs = 1.5*Fs;
+Jab_sound2 = audioplayer(y, Fs);
+
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
+
  
  
     % ----- Read Arduino -----
@@ -365,13 +375,15 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
             
             % jab Sound
+            
             play(Jab_sound);
+            
 
             heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
         
-    
+            
         end
 
     else 
@@ -388,18 +400,22 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
             
             % jab Sound
-            play(Jab_sound);
+
+            play(Jab_sound2);
+            
 
             
             heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
             burnt = 0.1 + health1/111.11;
-    
+             
         end
      else 
         ux = 0;
     end
-            
+    
+   
+
     blackw1 = 1.000001 - health1/100;
     dhb_width1 = dhb_width*blackw1+(0.003*(1-health1/100));
     
@@ -428,7 +444,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
 
     drawnow limitrate
-
+    
     if health1 <= 0 || health2 <= 0
         
        
