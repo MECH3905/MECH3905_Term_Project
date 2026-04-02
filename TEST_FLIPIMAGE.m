@@ -116,7 +116,7 @@ Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
 
 [name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
-pause(0.1)
+pause(1)
 
 %% Player Text namse 
 nameText1 = text(0, 0, name1, 'Color','blue','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
