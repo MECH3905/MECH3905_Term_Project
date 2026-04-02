@@ -116,8 +116,8 @@ Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
 
 %% Player Text namse 
-nameText1 = text(0, 0, name1, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
-nameText2 = text(0, 0, name2, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
+nameText1 = text(0, 0, name1, 'Color','blue','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
+nameText2 = text(0, 0, name2, 'Color','red','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
