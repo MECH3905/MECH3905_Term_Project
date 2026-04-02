@@ -20,8 +20,8 @@ eq = 1;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj1 = serialport("COM4",2000000);   % Player 1
-arduinoObj2 = serialport("COM7",2000000);   % Player 2
+arduinoObj1 = serialport("COM3",2000000);   % Player 1
+arduinoObj2 = serialport("COM5",2000000);   % Player 2
 
 pause(5)
 
@@ -101,7 +101,7 @@ u2x = 0;
 [name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
- y0 = 0.1*y0;
+ y0 = 0.3*y0;
  backgroundsound = audioplayer(y0, leep);
  play(backgroundsound);
 
@@ -272,6 +272,9 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     end
     
     % player 1 x
+
+   
+
     if x1start(1) > xl
         x1start(1) = xl;
         x1start(2) = 0;
@@ -292,7 +295,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     
     %% y = screeeny-1 && x = 0-1.778
     
-    x1 = ((x1start(1)+xl)/(2*xl))*bgWidth;
+    x1 = ((x1start(1)+xl)/(2*xl))*bgWidth - 0.25;
     y1 = (y1start(1)/yl)*bgHeight;
     
     if y1 > bgHeight
@@ -300,14 +303,26 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     elseif y1 < screeny
         y1 = screeny;
     end
+
+    if x1 > bgWidth
+        x1 = bgWidth;
+    elseif x1 < 0
+        x1 = 0;
+    end
     
-    x2 = ((x2start(1)+xl)/(2*xl))*bgWidth;
+    x2 = ((x2start(1)+xl)/(2*xl))*bgWidth + 0.25;
     y2 = (y2start(1)/yl)*bgHeight;
     
     if y2 > bgHeight
         y2 = bgHeight;
     elseif y2 < screeny
         y2 = screeny;
+    end
+
+    if x2 > bgWidth
+        x2 = bgWidth;
+    elseif x2 < 0
+        x2 = 0;
     end
 
     set(nameText1, 'Position', [x1, y1+scale+0.05, 0]);
