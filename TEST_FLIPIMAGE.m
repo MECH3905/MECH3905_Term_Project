@@ -23,7 +23,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
 arduinoObj1 = serialport("COM3",2000000);   % Player 1
 arduinoObj2 = serialport("COM5",2000000);   % Player 2
 
-pause(5)
+pause(2)
 
 
 configureTerminator(arduinoObj1,"CR/LF");
@@ -97,11 +97,11 @@ p1jabbtn = 1;
 
 ux = 0;
 u2x = 0;
-[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
+
 
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
- y0 = 0.1*y0;
+ y0 = 0.2*y0;
  backgroundsound = audioplayer(y0, leep);
  play(backgroundsound);
 
@@ -115,12 +115,13 @@ Jab_sound = audioplayer(y, Fs);
 Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
 
-
-%pause(5)
+[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
+pause(0.1)
 
 %% Player Text namse 
-nameText1 = text(0, 0, name1, 'Color','blue','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
-nameText2 = text(0, 0, name2, 'Color','red','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
+nameText1 = text(0, 0, name1, 'Color','blue','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+nameText2 = text(0, 0, name2, 'Color','red','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+%pause(0.5)
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
@@ -166,12 +167,11 @@ while ishandle(run)
         p2jabbtn = num2(7);
     end
                 % Deadband
-                if (raw - 512) > 300
+                if (raw - 512) > 500
                         
                     up = 0;
 
-                elseif (raw - 512) > 400
-                    p1crouchbtn = 0;
+                
                 else 
                     up = 1;
                 end  
@@ -205,10 +205,9 @@ while ishandle(run)
                  
             
             % player 2 controls
-                if (raw2 - 512) > 300
+                if (raw2 - 512) > 500
                     up2 = 0;
-                elseif (raw2 - 512) > 400
-                    p2crouchbtn = 0;
+                
                 else
                     up2 = 1;
                 end
@@ -391,7 +390,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             play(Jab_sound2);
             
 
-            heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
+            heart2 = (0.01 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
             burnt = 0.1 + health1/111.11;
         end
@@ -409,7 +408,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             play(Jab_sound);
             
 
-            heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
+            heart = (0.01 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
         
