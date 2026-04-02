@@ -119,11 +119,6 @@ Jab_sound2 = audioplayer(y, Fs);
 nameText1 = text(0, 0, name1, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
 nameText2 = text(0, 0, name2, 'Color','white','FontSize',12,'FontWeight','bold','HorizontalAlignment','center');
 
-%% to fix player name text 
-x1 = screenx;
-y1 = screeny;
-x2 = screenx + 0.5;
-y2 = screeny;
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
 
@@ -1050,28 +1045,13 @@ function [name1, name2] = startScreen()
         'YData',[btn_cy - btn_height/2, btn_cy + btn_height/2], ...
         'AlphaData', start_alpha * 0);
 
-    % Store handles so callback can access them (i think)
-    handles.p1box = p1box;
-    handles.p2box = p2box;
-    handles.fig   = fig;
-    guidata(fig, handles);
-
-    set(start_img, 'ButtonDownFcn', @(~,~) startCallback(fig));
-
-    drawnow;
+    set(start_img, 'ButtonDownFcn', @(~,~) uiresume(fig));
 
     uiwait(fig);
 
-    name1 = getappdata(fig, 'name1');
-    name2 = getappdata(fig, 'name2');
+    name1 = get(p1box, 'String');
+    name2 = get(p2box, 'String');
 
     close(fig);
 
-end
-
-function startCallback(fig)
-    handles = guidata(fig);
-    setappdata(fig, 'name1', get(handles.p1box, 'String'));
-    setappdata(fig, 'name2', get(handles.p2box, 'String'));
-    uiresume(fig);
 end
