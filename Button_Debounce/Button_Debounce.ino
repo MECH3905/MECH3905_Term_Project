@@ -1,12 +1,3 @@
-<<<<<<< Updated upstream
-// Button Presses 
-
-// Button Pins
-const int jumpPin = 4;
-const int dashPin = 5;
-const int crouchPin = 6;
-const int jabPin = 7;
-=======
 // MECH3905 Term Project
 // Date: April 6, 2026
 // Group 6 Members: 
@@ -20,7 +11,6 @@ const int crouchPin = 8; // Digital pin 8 represents the crouch pin
 const int dashPin = 9;   // Digital pin 9 represents the dash pin
 const int jabPin = 10;   // Digital pin 10 represents the jab pin 
 const int jumpPin = 11;  // Digital pin 11 represents the jump pin
->>>>>>> Stashed changes
 
 // Joystick Pins
 const int xPin = A0; // Analog pin 0 represents the joystick x-axis pin
@@ -43,95 +33,112 @@ int stableJumpState = HIGH; // Stable jump debounce state set to HIGH
 int stableDashState = HIGH; // Stable dash debounce state set to HIGH
 int stableJabState  = HIGH; // Stable jab debounce state set to HIGH
 
-unsigned long lastDebounceTimeJump = 0;
-unsigned long lastDebounceTimeDash = 0;
-unsigned long lastDebounceTimeJab  = 0;
+unsigned long lastDebounceTimeJump = 0; // Last time jump button pressed initialized as 0
+unsigned long lastDebounceTimeDash = 0; // Last time dash button pressed initialized as 0
+unsigned long lastDebounceTimeJab  = 0; // Last time jab button pressed initialized as 0
 
-long counter = 0;
+long counter = 0; // Loop iteration counter initialized as 0
+
+int i = 0; // Delay counter for jump button 
+int k = 0; // Hold counter for jab button
+int l = 0; // Hold limiter for jump button
+int d = 0; // Delay counter for dash button 
+int c = 0; // Hold limiter for dash button
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(2000000); // Initialize serial communication at a baud rate of 2000000
 
-  pinMode(jumpPin, INPUT);
+  // Button pins declared as inputs
+  pinMode(jumpPin, INPUT); 
   pinMode(dashPin, INPUT);
   pinMode(crouchPin, INPUT);
   pinMode(jabPin, INPUT);
 
-  delay(500);
+  delay(500); // 500 milisecond setup delay
 }
 
 void loop() {
 
-  int xValue = analogRead(xPin);
-  int yValue = analogRead(yPin);
+  // Read joystick analog values
+  int xValue = analogRead(xPin); // X-axis position values
+  int yValue = analogRead(yPin); // Y-axis position values 
 
   // JUMP BUTTON
-  int jumpReading = digitalRead(jumpPin);
+  int jumpReading = digitalRead(jumpPin); // Read jump button state
 
-  if (jumpReading != lastJumpReading) {
-    lastDebounceTimeJump = millis();
-  }
+  if (i > 20){
+    if (jumpReading == 0){ // If button pressed (LOW)
+        if(l < 30){        // Limit how long btton stay pressed to 30 iterations of counter
+          jumpBtn = 0;     // Register jump press
+          l++;             // Increment hold duration counter
+        }
 
-  if ((millis() - lastDebounceTimeJump) > debounceDelay) {
-    if (jumpReading != stableJumpState) {
-      stableJumpState = jumpReading;
-
-      if (stableJumpState == LOW) { 
-        jumpBtn = 0; 
-      }
+    } else {
+      i = 0;       // Reset delay counter
+      jumpBtn = 1; // Register release
+      l = 0;       // Reset hold limiter
     }
   }
 
-  lastJumpReading = jumpReading;
+  i++; // Increment jump delay counter
 
-  // DASH BUTTOn 
-  int dashReading = digitalRead(dashPin);
+  // DASH BUTTON 
 
-  if (dashReading != lastDashReading) {
-    lastDebounceTimeDash = millis();
-  }
+  int dashReading = digitalRead(dashPin); // Read dash button state
 
-  if ((millis() - lastDebounceTimeDash) > debounceDelay) {
-    if (dashReading != stableDashState) {
-      stableDashState = dashReading;
+  if (d > 20){
+    if (dashReading == 0){ // If button pressed (LOW)
+        if(c < 30){        // Limit how long btton stay pressed to 30 iterations of counter
+          dashBtn = 0;     // Register dash press
+          c++;             // Increment hold duration counter
+        }
 
-      if (stableDashState == LOW) {
-        dashBtn = 0;
-      }
+    } else {
+      d = 0;       // Reset delay counter
+      dashBtn = 1; // Register release
+      c = 0;       // Reset hold limiter
     }
   }
 
-  lastDashReading = dashReading;
+  d++; // Increment dash delay counter
 
-  // JAB BUTTON
-  int jabReading = digitalRead(jabPin);
+  // JAB BUTTON 
+  bool jabReading = digitalRead(jabPin); // Read jab button
 
-  if (jabReading != lastJabReading) {
-    lastDebounceTimeJab = millis();
-  }
-
-  if ((millis() - lastDebounceTimeJab) > debounceDelay) {
-    if (jabReading != stableJabState) {
-      stableJabState = jabReading;
-
-      if (stableJabState == LOW) {
-        jabBtn = 0;
+  if (jabReading == 0){ // Button pressed
+      if(k < 20){       // Shorter hold window than others
+        jabBtn = 0;     // Register jab press
+        k++;            // Increment hold duration counter
       }
-    }
+
+  } else {
+    
+    jabBtn = 1; // Register release
+    k = 0;      // Reset hold counter
   }
 
-  lastJabReading = jabReading;
+  // ---------------------- CROUCH BUTTON ----------------------
 
-  // CROUCH BUTTON
-  crouchBtn = digitalRead(crouchPin);
+  crouchBtn = digitalRead(crouchPin); // Direct read (no debounce logic)
 
+  // ---------------------- Serial Output ----------------------
 
-  Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn));
+  // Send data as CSV: counter, joystick, and button states
+  Serial.println(
+    String(counter) + "," +
+    String(xValue) + "," +
+    String(yValue) + "," +
+    String(jumpBtn) + "," +
+    String(dashBtn) + "," +
+    String(crouchBtn) + "," +
+    String(jabBtn)
+  );
 
+  // Reset one-shot button outputs (prevents continuous press spam)
   jumpBtn = 1;
   dashBtn = 1;
   jabBtn = 1;
 
-  counter++;
-  delay(10);
+  counter++;   // Increment loop counter
+  delay(10);   // Small loop delay (~100 Hz update rate)
 }
