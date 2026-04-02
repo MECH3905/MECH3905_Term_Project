@@ -123,11 +123,21 @@ nameText1 = text(0, 0, name1, 'Color','blue','FontSize',24,'FontWeight','bold','
 nameText2 = text(0, 0, name2, 'Color','red','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
 %pause(0.5)
 
+i = 0;
+
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
 
- 
- 
+    if i < 200
+        
+        ux = -30000;
+
+        u2x = 30000;
+
+        i = i + 1;
+    end
+
+    
     % ----- Read Arduino -----
  % player 1
     if arduinoObj1.NumBytesAvailable > 0
