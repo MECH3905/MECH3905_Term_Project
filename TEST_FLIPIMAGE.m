@@ -180,7 +180,7 @@ while ishandle(run)
 
                 elseif p1dashbtn == 0 && p1crouchbtn == 1 && y1 < (screeny+0.2)
 
-                    uy = -400*(raw-512)/512;
+                    uy = 400*(raw-512)/512;
                     
                 else
                     uy = 0;  % Reset applied force if within deadband
@@ -214,7 +214,7 @@ while ishandle(run)
                     u2y = 800*(0.15+0.85*p2crouchbtn);
                 
                 elseif p2dashbtn == 0 && p2crouchbtn == 1 && y2 < (screeny+0.2)
-                    u2y = -400*(raw2-512)/512;
+                    u2y = 400*(raw2-512)/512;
                 
                 else
                     u2y = 0;
