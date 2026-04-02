@@ -1,10 +1,8 @@
-// Button Presses 
-
 // Button Pins
-const int jumpPin = 4;
-const int dashPin = 5;
-const int crouchPin = 6;
-const int jabPin = 7;
+const int jumpPin = 11;
+const int dashPin = 9;
+const int crouchPin = 8;
+const int jabPin = 10;
 
 // Joystick Pins
 const int xPin = A0;
@@ -33,9 +31,15 @@ unsigned long lastDebounceTimeDash = 0;
 unsigned long lastDebounceTimeJab  = 0;
 
 long counter = 0;
+int i = 0;
+int k = 0;
+int l = 0;
+int d = 0;
+int c = 0;
+
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(2000000);
 
   pinMode(jumpPin, INPUT);
   pinMode(dashPin, INPUT);
@@ -53,63 +57,66 @@ void loop() {
   // JUMP BUTTON
   int jumpReading = digitalRead(jumpPin);
 
-  if (jumpReading != lastJumpReading) {
-    lastDebounceTimeJump = millis();
-  }
 
-  if ((millis() - lastDebounceTimeJump) > debounceDelay) {
-    if (jumpReading != stableJumpState) {
-      stableJumpState = jumpReading;
-
-      if (stableJumpState == LOW) { 
-        jumpBtn = 0; 
-      }
+ if (i>20){
+    if (jumpReading == 0){
+        if(l<30){
+          jumpBtn = 0;
+          l++;
+          
+        }
+        
+    }else{
+      i=0;
+      jumpBtn = 1;
+      l = 0;
     }
-  }
+ }
 
-  lastJumpReading = jumpReading;
+ i++;
 
   // DASH BUTTOn 
   int dashReading = digitalRead(dashPin);
 
-  if (dashReading != lastDashReading) {
-    lastDebounceTimeDash = millis();
-  }
-
-  if ((millis() - lastDebounceTimeDash) > debounceDelay) {
-    if (dashReading != stableDashState) {
-      stableDashState = dashReading;
-
-      if (stableDashState == LOW) {
-        dashBtn = 0;
-      }
+  if (d>20){
+    if (dashReading == 0){
+        if(c<30){
+          dashBtn = 0;
+          c++;
+          
+        }
+        
+    }else{
+      d=0;
+      dashBtn = 1;
+      c = 0;
     }
-  }
+ }
 
-  lastDashReading = dashReading;
-
+ d++;
   // JAB BUTTON
-  int jabReading = digitalRead(jabPin);
+  bool jabReading = digitalRead(jabPin);
 
-  if (jabReading != lastJabReading) {
-    lastDebounceTimeJab = millis();
-  }
+  
 
-  if ((millis() - lastDebounceTimeJab) > debounceDelay) {
-    if (jabReading != stableJabState) {
-      stableJabState = jabReading;
-
-      if (stableJabState == LOW) {
-        jabBtn = 0;
-      }
+    if (jabReading == 0){
+        if(k<20){
+          jabBtn = 0;
+          k++;
+          
+        }
+        
+    }else{
+      //i=0;
+      jabBtn = 1;
+      k = 0;
     }
-  }
 
-  lastJabReading = jabReading;
+
+
 
   // CROUCH BUTTON
   crouchBtn = digitalRead(crouchPin);
-
 
   Serial.println(String(counter)+","+String(xValue)+","+String(yValue)+","+String(jumpBtn)+","+String(dashBtn)+","+String(crouchBtn)+","+String(jabBtn));
 
