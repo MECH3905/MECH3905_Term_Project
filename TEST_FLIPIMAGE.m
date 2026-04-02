@@ -20,8 +20,8 @@ eq = 1;
 hitbox = 0.15;   % player hitbox parameter pi*r^2
  
 %% ---------------- SERIAL SETUP ----------------
-arduinoObj1 = serialport("COM4",2000000);   % Player 1
-arduinoObj2 = serialport("COM7",2000000);   % Player 2
+arduinoObj1 = serialport("COM3",2000000);   % Player 1
+arduinoObj2 = serialport("COM5",2000000);   % Player 2
 
 pause(5)
 
@@ -98,7 +98,7 @@ p1jabbtn = 1;
 ux = 0;
 u2x = 0;
 
-[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
+
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
  y0 = 0.1*y0;
@@ -114,6 +114,8 @@ Jab_sound = audioplayer(y, Fs);
 [y, Fs] = audioread('jab_oof.mp4');
 Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
+
+[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
 
 %% Player Text namse 
 nameText1 = text(0, 0, name1, 'Color','blue','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
@@ -163,12 +165,11 @@ while ishandle(run)
         p2jabbtn = num2(7);
     end
                 % Deadband
-                if (raw - 512) <-300
+                if (raw - 512) > 300
                         
                     up = 0;
 
-                elseif (raw - 512) > 400
-                    p1crouchbtn = 0;
+                
                 else 
                     up = 1;
                 end  
@@ -202,10 +203,9 @@ while ishandle(run)
                  
             
             % player 2 controls
-                if (raw2 - 512) < -300
+                if (raw2 - 512) > 300
                     up2 = 0;
-                elseif (raw2 - 512) > 400
-                    p2crouchbtn = 0;
+                
                 else
                     up2 = 1;
                 end
