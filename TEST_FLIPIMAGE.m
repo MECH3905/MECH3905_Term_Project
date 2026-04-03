@@ -261,6 +261,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             x1start(2) = 0;
         
     end
+
+    if p2jabbtn == 0 && p2dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
+         
+            x2start(2) = 0;
+        
+    end
     
     % ----- Absolute Boundary Limits -----
     
