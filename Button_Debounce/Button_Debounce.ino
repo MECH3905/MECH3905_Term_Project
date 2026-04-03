@@ -112,18 +112,14 @@ void loop() {
       }
 
   } else {
-    
     jabBtn = 1; // Register release
     k = 0;      // Reset hold counter
   }
 
-  // ---------------------- CROUCH BUTTON ----------------------
-
+  //CROUCH BUTTON 
   crouchBtn = digitalRead(crouchPin); // Direct read (no debounce logic)
 
-  // ---------------------- Serial Output ----------------------
-
-  // Send data as CSV: counter, joystick, and button states
+  // erial output. Send counter, joystick, and button state data
   Serial.println(
     String(counter) + "," +
     String(xValue) + "," +
@@ -134,7 +130,7 @@ void loop() {
     String(jabBtn)
   );
 
-  // Reset one-shot button outputs (prevents continuous press spam)
+  // Reset button outputs (no button spam)
   jumpBtn = 1;
   dashBtn = 1;
   jabBtn = 1;
