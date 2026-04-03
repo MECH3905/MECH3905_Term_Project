@@ -120,15 +120,7 @@ void loop() {
   crouchBtn = digitalRead(crouchPin); // Direct read (no debounce logic)
 
   // erial output. Send counter, joystick, and button state data
-  Serial.println(
-    String(counter) + "," +
-    String(xValue) + "," +
-    String(yValue) + "," +
-    String(jumpBtn) + "," +
-    String(dashBtn) + "," +
-    String(crouchBtn) + "," +
-    String(jabBtn)
-  );
+  Serial.println(String(counter) + "," +String(xValue) + "," +String(yValue) + "," +String(jumpBtn) + "," +String(dashBtn) + "," +String(crouchBtn) + "," +String(jabBtn));
 
   // Reset button outputs (no button spam)
   jumpBtn = 1;
@@ -136,5 +128,5 @@ void loop() {
   jabBtn = 1;
 
   counter++;   // Increment loop counter
-  delay(10);   // Small loop delay (~100 Hz update rate)
+  delay(10);   // 10 milisecond delay 
 }
