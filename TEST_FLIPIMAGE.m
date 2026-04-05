@@ -125,6 +125,7 @@ nameText2 = text(0, 0, name2, 'Color','red','FontSize',24,'FontWeight','bold','H
 
 i = 0;
 
+lastTime = tic;
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
 
@@ -468,6 +469,13 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
 
     drawnow limitrate
+
+    elapsed = toc(lastTime);  
+    hz = 1 / elapsed;         
+
+    fprintf('FPS/HZ = %.7f Hz\n', hz);
+
+    lastTime = tic;         
     
     if health1 <= 0 || health2 <= 0
     
