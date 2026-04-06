@@ -7,7 +7,14 @@
 % Purpose: Two player fighter game using arduino uno joystick and button inputs
 
 % IMAGE REFERENCE
-% All images created through Google Gemini Nano Bannana 2
+% Author: Google Gemini Nano Bannana 2
+% Website URL: https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-CA&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*xe3rwt*_gcl_au*ODk5Njc3MzQuMTc3Mjc1OTQxMg..*_ga*NDc0OTA2Mjk2LjE3NzI3NTk0MTA.*_ga_WC57KJ50ZZ*czE3NzU0ODI3NDAkbzI1JGcwJHQxNzc1NDgyNzQwJGo2MCRsMCRoMA..
+% Dates: March 4, 2026 - April 2, 2026
+
+% CODE REFERENCE
+% Author: Mae Seto, BrightSpace lecture content 
+% Website URL: https://dal.brightspace.com/d2l/le/content/414169/Home
+% Dates: January 7, 2026 - April 6, 2026
 
 clear all % Clear all variables from workspace
 close all % Close all open figures
