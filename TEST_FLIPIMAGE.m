@@ -23,7 +23,7 @@ hitbox = 0.15;   % player hitbox parameter pi*r^2
 arduinoObj1 = serialport("COM3",2000000);   % Player 1
 arduinoObj2 = serialport("COM5",2000000);   % Player 2
 
-pause(5)
+pause(2)
 
 
 configureTerminator(arduinoObj1,"CR/LF");
@@ -101,7 +101,7 @@ u2x = 0;
 
 %% Background Sound
  [y0, leep] = audioread('Guile_theme.mp3');
- y0 = 0.3*y0;
+ y0 = 0.2*y0;
  backgroundsound = audioplayer(y0, leep);
  play(backgroundsound);
 
@@ -116,16 +116,28 @@ Fs = 1.5*Fs;
 Jab_sound2 = audioplayer(y, Fs);
 
 [name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
+pause(1)
 
 %% Player Text namse 
-nameText1 = text(0, 0, name1, 'Color','blue','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
-nameText2 = text(0, 0, name2, 'Color','red','FontSize',18,'FontWeight','bold','HorizontalAlignment','center');
+nameText1 = text(0, 0, name1, 'Color','blue','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+nameText2 = text(0, 0, name2, 'Color','red','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+%pause(0.5)
+
+i = 0;
 
 %% ---------------- MAIN LOOP ----------------
 while ishandle(run)
 
- 
- 
+    if i < 200
+        
+        ux = -30000;
+
+        u2x = 30000;
+
+        i = i + 1;
+    end
+
+    
     % ----- Read Arduino -----
  % player 1
     if arduinoObj1.NumBytesAvailable > 0
@@ -165,7 +177,7 @@ while ishandle(run)
         p2jabbtn = num2(7);
     end
                 % Deadband
-                if (raw - 512) > 300
+                if (raw - 512) > 500
                         
                     up = 0;
 
@@ -203,7 +215,7 @@ while ishandle(run)
                  
             
             % player 2 controls
-                if (raw2 - 512) > 300
+                if (raw2 - 512) > 500
                     up2 = 0;
                 
                 else
@@ -247,6 +259,12 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
     if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
          
             x1start(2) = 0;
+        
+    end
+
+    if p2jabbtn == 0 && p2dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
+         
+            x2start(2) = 0;
         
     end
     
@@ -403,7 +421,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             play(Jab_sound2);
             
 
-            heart2 = (0.025 + (sqrt(u2x^2 + u2y^2))*0.000001);
+            heart2 = (0.01 + (sqrt(u2x^2 + u2y^2))*0.000001);
             health1 = health1 - heart2;
             burnt = 0.1 + health1/111.11;
         end
@@ -421,7 +439,7 @@ y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
             play(Jab_sound);
             
 
-            heart = (0.025 + (sqrt(ux^2 + uy^2))*0.000001);
+            heart = (0.01 + (sqrt(ux^2 + uy^2))*0.000001);
             health2 = health2 - heart;
             burnt2 = 0.1 + health2/111.11;
         
