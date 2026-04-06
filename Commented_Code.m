@@ -533,7 +533,7 @@ function dxdt = f(y, h, uy, m, rho, Cd, A, g)
  
     dxdt(1) = v;                       % Verticle velocity
     dxdt(2) = (uy - F_drag - g*m) / m; % Verticle acceleration 
-end,
+end
  
 % Horizontal dynamics: Drag 
 function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
@@ -547,6 +547,7 @@ function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
 
     dxdtx(1) = vx;                 % Horizontal velocity
     dxdtx(2) = (ux - F_dragx) / m; % Horizontal acceleration 
+end
 
 % FIGURE SETUP FUNCTION
 % Creates the game window, loads all sprite images, sets up the background, 
