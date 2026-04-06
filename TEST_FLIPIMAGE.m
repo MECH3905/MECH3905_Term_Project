@@ -1,0 +1,1090 @@
+clear all
+close all
+clc
+
+
+% Declare global variables 
+
+ 
+% Declare physical constants 
+m   = 10;        % mass (kg)
+rho = 1.2;       % air density (kg/m^3)
+Cd  = 5;         % drag coefficient
+A   = 10;        % cross-sectional area (m^2)
+g = 9.81;        % gravitational acceleration (m/s^2)
+F_drag = 0;      % player 1 y-component initial drag force
+F_dragx = 0;     % player 1 x-component initial drag force
+F_dragx2 = 0;    % player 2 x-component initial drag force
+F_drag2 = 0;     % player 2 y-component initial drag force
+eq = 1;
+hitbox = 0.15;   % player hitbox parameter pi*r^2
+ 
+%% ---------------- SERIAL SETUP ----------------
+arduinoObj1 = serialport("COM3",2000000);   % Player 1
+arduinoObj2 = serialport("COM5",2000000);   % Player 2
+
+pause(2)
+
+
+configureTerminator(arduinoObj1,"CR/LF");
+configureTerminator(arduinoObj2,"CR/LF");
+
+flush(arduinoObj1);
+flush(arduinoObj2);
+
+
+
+%% ---------------- FIGURE SETUP ----------------
+          [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab, ...
+          scale,P1_HB,alphaP1,P2_HB,alphaP2,Black_HB,alphadhb,...
+          hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
+          m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, ...
+          Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip,p2_left,dhb_right,p2_dhb_left, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win] = figure_setup();
+
+xl = bgWidth*100;    % absolute x scaling
+yl = bgHeight*100;   % absolute y scaling
+
+x1start = [0;0];       % initializing player 1 x position and velocity
+y1start = [0;0];       % initializing player 1 x position and velocity
+x2start = [0;0];
+y2start = [0;0];
+
+
+
+player1image = {0,0};
+player2image = {0,0};
+
+dt = 0.02;       % time step
+
+screenx = 0.25;  % initial x position 
+screeny = 0.1;  % initial y position 
+
+
+
+%% Initializing Images
+HB1 = image(P1_HB, 'XData',[hb_left, hb_left + hb_width], 'YData',[hb_top - hb_height+0.0027, hb_top], 'AlphaData', alphaP1);
+
+HB2 = image(P2_HB, 'XData',[p2_left, p2_left + hb_width], 'YData',[hb_top - hb_height, hb_top], 'AlphaData', alphaP2);
+
+DHB1 = image(Black_HB, 'XData',[dhb_left, dhb_left + dhb_width], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+DHB2 = image(Black_HB, 'XData',[bgWidth-0.48 bgWidth-0.03], 'YData',[0.97-0.06 0.97], 'AlphaData', alphadhb);
+
+
+burntrun = image(Roasted_Run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Run);  
+run = image(m_run,'XData',[screenx-scale screenx+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_run);
+
+burntrun2 = image(Roasted_Runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_Roasted_Runflip);
+p2run = image(m_runflip,'XData',[screenx+0.5-scale screenx+0.5+scale], 'YData',[screeny-scale+0.1 screeny+scale+0.1], 'AlphaData',alpha_runflip);
+
+%% Initial Values
+
+health1 = 100;
+health2 = 100;
+
+heart = 0;
+burnt = 1;
+burnt2 = 1;
+crouch = 1;
+p1jabbtn = 1;
+
+ux = 0;
+u2x = 0;
+
+
+%% Background Sound
+ [y0, leep] = audioread('Guile_theme.mp3');
+ y0 = 0.2*y0;
+ backgroundsound = audioplayer(y0, leep);
+ play(backgroundsound);
+
+ %%load jab sound 
+
+[y, Fs] = audioread('jab_oof.mp4');
+Fs = 1.75*Fs;
+Jab_sound = audioplayer(y, Fs);
+
+[y, Fs] = audioread('jab_oof.mp4');
+Fs = 1.5*Fs;
+Jab_sound2 = audioplayer(y, Fs);
+
+[name1, name2] = startScreen(); % this is temp spot, we will need to try it on other laptop 
+pause(1)
+
+%% Player Text namse 
+nameText1 = text(0, 0, name1, 'Color','blue','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+nameText2 = text(0, 0, name2, 'Color','red','FontSize',24,'FontWeight','bold','HorizontalAlignment','center');
+%pause(0.5)
+
+i = 0;
+
+%% ---------------- MAIN LOOP ----------------
+while ishandle(run)
+
+    if i < 200
+        
+        ux = -30000;
+
+        u2x = 30000;
+
+        i = i + 1;
+    end
+
+    
+    % ----- Read Arduino -----
+ % player 1
+    if arduinoObj1.NumBytesAvailable > 0
+    
+        data1 = readline(arduinoObj1);
+        tmp1 = split(strtrim(data1),',');
+        num1 = str2double(tmp1);
+    
+        if numel(num1) < 7 || any(isnan(num1))
+            continue
+        end
+    
+        raw = num1(2);
+        rawx = num1(3);
+        p1jumpbtn = num1(4);
+        p1dashbtn = num1(5);
+        p1crouchbtn = num1(6);
+        p1jabbtn = num1(7);
+    end
+    
+    % player 2 
+    if arduinoObj2.NumBytesAvailable > 0
+    
+        data2 = readline(arduinoObj2);
+        tmp2 = split(strtrim(data2),',');
+        num2 = str2double(tmp2);
+    
+        if numel(num2) < 7 || any(isnan(num2))
+            continue
+        end
+    
+        raw2 = num2(2);
+        rawx2 = num2(3);
+        p2jumpbtn = num2(4);
+        p2dashbtn = num2(5);
+        p2crouchbtn = num2(6);
+        p2jabbtn = num2(7);
+    end
+                % Deadband
+                if (raw - 512) > 500
+                        
+                    up = 0;
+
+                
+                else 
+                    up = 1;
+                end  
+
+                if p1jumpbtn == 0 && y1 < (screeny+0.2)
+                        
+                    uy = 800*(0.15+0.85*p1crouchbtn);
+
+                elseif p1dashbtn == 0 && p1crouchbtn == 1 && y1 < (screeny+0.2)
+
+                    uy = 400*(raw-512)/512;
+                    
+                else
+                    uy = 0;  % Reset applied force if within deadband
+                end
+
+                % Deadband
+                if abs(rawx - 512) < 20 
+                    %ux = 0;
+                   % x1start(2) = 0;
+
+                elseif p1dashbtn == 0 && p1crouchbtn == 1 
+
+                    ux = -3000*(rawx-512)/512;
+                    
+                else 
+                    ux = -(rawx - 512)*(0.15+0.85*p1crouchbtn);
+                    
+                end 
+                                
+                 
+            
+            % player 2 controls
+                if (raw2 - 512) > 500
+                    up2 = 0;
+                
+                else
+                    up2 = 1;
+                end
+                
+                if p2jumpbtn == 0 && y2 < (screeny+0.2)
+                    u2y = 800*(0.15+0.85*p2crouchbtn);
+                
+                elseif p2dashbtn == 0 && p2crouchbtn == 1 && y2 < (screeny+0.2)
+                    u2y = 400*(raw2-512)/512;
+                
+                else
+                    u2y = 0;
+                end
+                
+                if abs(rawx2 - 512) < 20 
+                    
+                    %u2x = 0;
+                    %x2start(2) = 0;
+                
+                elseif p2dashbtn == 0 && p2crouchbtn == 1 
+                    u2x = -3000*(rawx2-512)/512;
+                
+                else
+                    
+                    u2x = -(rawx2 - 512)*(0.15+0.85*p2crouchbtn);
+                end
+                
+                
+
+h1 = 1.0+(100.0-health1)*0.05;
+h2 = 1.0+(100.0-health2)*0.05;
+
+% ----- RK4 Integration -----
+y1start = RK4(y1start, dt, h1, uy,m, rho, Cd, A, g);
+x1start = RK4x(x1start, dt, h1, ux, m, rho, Cd, A, g);
+x2start = RK4x(x2start, dt, h2, u2x, m, rho, Cd, A, g);
+y2start = RK4(y2start, dt, h2, u2y, m, rho, Cd, A, g);
+  
+    if p1jabbtn == 0 && p1dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
+         
+            x1start(2) = 0;
+        
+    end
+
+    if p2jabbtn == 0 && p2dashbtn == 1 % I want to be able to hit the other player after using dash without stopping 
+         
+            x2start(2) = 0;
+        
+    end
+    
+    % ----- Absolute Boundary Limits -----
+    
+    % player 1 y
+    
+    if y1start(1) > yl
+        y1start(1) = yl;
+        y1start(2) = 0;
+    elseif y1start(1) < 0
+        y1start(1) = 0;
+        y1start(2) = 0;
+    end
+    
+    % player 2 y
+    if y2start(1) > yl
+        y2start(1) = yl;
+        y2start(2) = 0;
+    elseif y2start(1) < 0
+        y2start(1) = 0;
+        y2start(2) = 0;
+    end
+    
+    % player 1 x
+
+   
+
+    if x1start(1) > xl
+        x1start(1) = xl;
+        x1start(2) = 0;
+    elseif x1start(1) < -xl
+        x1start(1) = -xl;
+        x1start(2) = 0;
+    end
+    
+    % player 2 x
+    if x2start(1) > xl
+        x2start(1) = xl;
+        x2start(2) = 0;
+    elseif x2start(1) < -xl
+        x2start(1) = -xl;
+        x2start(2) = 0;
+    end
+    
+    
+    %% y = screeeny-1 && x = 0-1.778
+    
+    x1 = ((x1start(1)+xl)/(2*xl))*bgWidth - 0.25;
+    y1 = (y1start(1)/yl)*bgHeight;
+    
+    if y1 > bgHeight
+        y1 = bgHeight;
+    elseif y1 < screeny
+        y1 = screeny;
+    end
+
+    if x1 > bgWidth
+        x1 = bgWidth;
+    elseif x1 < 0
+        x1 = 0;
+    end
+    
+    x2 = ((x2start(1)+xl)/(2*xl))*bgWidth + 0.25;
+    y2 = (y2start(1)/yl)*bgHeight;
+    
+    if y2 > bgHeight
+        y2 = bgHeight;
+    elseif y2 < screeny
+        y2 = screeny;
+    end
+
+    if x2 > bgWidth
+        x2 = bgWidth;
+    elseif x2 < 0
+        x2 = 0;
+    end
+
+    set(nameText1, 'Position', [x1, y1+scale+0.05, 0]);
+    set(nameText2, 'Position', [x2, y2+scale+0.05, 0]);
+   
+    %% replacing plyer images  
+   
+    if x1 <= x2
+        
+        player1image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
+
+        set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
+        set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
+
+        player2image = changeimageflip(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, p2dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
+
+        set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+        set(burntrun2,'CData', player2image{3}, 'AlphaData', player2image{4});
+
+    else
+        player1image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
+
+        set(burntrun,'CData', player1image{3}, 'AlphaData', player1image{4});
+        set(run,'CData', player1image{1}, 'AlphaData', player1image{2});
+
+        player2image = changeimage(u2x, up2, burnt2, p2crouchbtn, p2jabbtn, p2jumpbtn, p2dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run,Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip);
+
+        set(p2run,'CData', player2image{1}, 'AlphaData', player2image{2});
+        set(burntrun2,'CData', player2image{3}, 'AlphaData', player2image{4});
+
+    end
+
+    %% Player hit and damage function
+%% Player hit and damage function
+    
+ % playuer 2 hits player 1
+    if p2jabbtn == 0 && p2crouchbtn == 1 && p1crouchbtn == 1
+    
+        hit2 = jabfunction(x2, y2, x1, y1, up2, hitbox);
+    
+        if hit2 == 1
+            ux = 5*u2x*(abs(u2x)/(abs(u2x)+0.001));
+            
+            % jab Sound
+
+            play(Jab_sound2);
+            
+
+            heart2 = (0.01 + (sqrt(u2x^2 + u2y^2))*0.000001);
+            health1 = health1 - heart2;
+            burnt = 0.1 + health1/111.11;
+        end
+        
+    % playuer 1 hits player 2 
+    elseif p1jabbtn == 0 && p1crouchbtn == 1 &&  p2crouchbtn == 1
+    
+        hit = jabfunction(x1, y1, x2, y2, up, hitbox);
+    
+        if hit ==1
+            u2x = 5*ux*(abs(ux)/(abs(ux)+0.001));
+            
+            % jab Sound
+            
+            play(Jab_sound);
+            
+
+            heart = (0.01 + (sqrt(ux^2 + uy^2))*0.000001);
+            health2 = health2 - heart;
+            burnt2 = 0.1 + health2/111.11;
+        
+        end
+
+    else
+        ux = 0; 
+        u2x = 0;
+    end
+    
+    
+   
+    
+   
+
+    blackw1 = 1.000001 - health1/100;
+    dhb_width1 = dhb_width*blackw1+(0.003*(1-health1/100));
+    
+    blackw2 = 1.000001 - health2/100;
+    dhb_width2 = dhb_width*blackw2;
+    %current_width1 = dhb_width1;    
+    
+    %% player 1 damage bar
+
+    set(burntrun,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
+    set(run,'XData',[x1-scale x1+scale],'YData',[y1-scale+0.1 y1+scale+0.1]);
+
+   
+    
+    
+    set(DHB1, 'XData',[dhb_right - dhb_width1, dhb_right], 'YData',[dhb_top - dhb_height, dhb_top], 'AlphaData', alphadhb);
+
+    
+    set(burntrun2,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]);
+    set(p2run,'XData',[x2-scale x2+scale],'YData',[y2-scale+0.1 y2+scale+0.1]); 
+    
+    % player 1 damage bar
+    
+
+
+    set(DHB2, 'XData',[p2_dhb_left, p2_dhb_left + dhb_width2], 'YData',[dhb_top - dhb_height, dhb_top]);
+
+    drawnow limitrate
+    
+    if health1 <= 0 || health2 <= 0
+    
+        if health1 <= 0
+            showWinScreen(2, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2); % player 2 wins
+        else
+            showWinScreen(1, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2); % player 1 wins
+        end
+    
+        break
+    
+    end
+end
+stop(backgroundsound);     
+clear arduinoObj1
+clear arduinoObj2
+
+%% ============================================================
+% RK4 FUNCTION
+% ============================================================
+ 
+function y_new = RK4(y, dt, h, uy,m, rho, Cd, A, g)
+    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
+    a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
+
+    k1=dt*f(y, h, uy,m, rho, Cd, A, g);
+    k2=dt*f(y+a21*k1, h, uy,m, rho, Cd, A, g);
+    k3=dt*f(y+a31*k1+a32*k2, h, uy,m, rho, Cd, A, g);
+    k4=dt*f(y+a41*k1+a42*k2+a43*k3, h, uy,m, rho, Cd, A, g);
+
+    y_new=y+w1*k1+w2*k2+w3*k3+w4*k4;
+end
+
+
+
+function x_new = RK4x(x, dt, h, ux, m, rho, Cd, A, g)
+    w1=1/6; w2=1/3; w3=1/3; w4=1/6; 
+    a21=1/2; a31=0; a32=1/2; a41=0; a42=0; a43=1;
+
+    k1=dt*fx(x, h, ux, m, rho, Cd, A, g);
+    k2=dt*fx(x+a21*k1, h, ux, m, rho, Cd, A, g);
+    k3=dt*fx(x+a31*k1+a32*k2, h, ux, m, rho, Cd, A, g);
+    k4=dt*fx(x+a41*k1+a42*k2+a43*k3, h, ux, m, rho, Cd, A, g);
+
+    x_new=x+w1*k1+w2*k2+w3*k3+w4*k4;
+end
+
+
+
+
+ 
+%% ============================================================
+% DYNAMICS FUNCTION
+% ============================================================
+ 
+function dxdt = f(y, h, uy,m, rho, Cd, A, g)
+ 
+    
+ 
+    dxdt = zeros(2,1);
+ 
+    v = y(2);
+ 
+    % Quadratic drag
+    F_drag = 0.5 * rho * Cd * A * v * abs(v) * h;
+ 
+    dxdt(1) = v;
+    dxdt(2) = (uy - F_drag - g*m) / m; 
+end
+ 
+function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
+ 
+    
+    
+    dxdtx = zeros(2,1);
+
+     vx = x(2);
+    
+    
+    % Quadratic drag
+    F_dragx = 0.5 * rho * Cd * A * vx * abs(vx) * h;
+
+
+    
+    
+        dxdtx(1) = vx;
+    
+    dxdtx(2) = (ux - F_dragx) / m;
+end
+
+
+%% ============================================================
+% FIGURE SETUP FUNCTION
+% ============================================================
+function [bgWidth,bgHeight,bg, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab, ...
+          scale,P1_HB,alphaP1,P2_HB,alphaP2,Black_HB,alphadhb,...
+          hb_width,hb_height,hb_left,hb_top,dhb_width,dhb_height,dhb_left,dhb_top,...
+          m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, ...
+          Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip,p2_left,dhb_right,p2_dhb_left,...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip, p1_win, p2_win] = figure_setup()
+
+ 
+
+    % Create fullscreen figure
+figure('WindowState','maximized', 'Toolbar','none', 'MenuBar','none', 'Color','k');
+    
+    % Background
+bg = imread('Campfire_Smackdown_Backdrop.jpg'); % read in background img
+bg = flipud(bg); % flip img
+[imgH,imgW,~] = size(bg);  % read size
+imgRatio = imgW/imgH; % get img ratio
+ 
+axH = 1; % max y
+axW = imgRatio; % img x size
+axX = (1-axW)/2; % img location 
+axY = 0; % min y
+
+    % Create axes
+ax = axes('Position',[axX axY axW axH]);
+hold on
+axis off
+
+    % Draw background with correct aspect ratio
+bgWidth = imgRatio;
+bgHeight = 1;
+
+image('CData',bg, 'XData',[0 bgWidth], 'YData',[0 bgHeight])
+
+axis image
+xlim([0 bgWidth])
+ylim([0 bgHeight])
+   
+    % Load Player Images
+[m_run,~,alpha_run] = imread('m_run.png');
+m_run = flipud(m_run);
+alpha_run = flipud(alpha_run);
+
+[m_runflip,~,alpha_runflip] = imread('m_run.png');
+m_runflip = rot90(m_runflip,2);
+alpha_runflip = rot90(alpha_runflip,2);
+
+[Roasted_Run,~,alpha_Roasted_Run] = imread('Roasted_Run.png');
+Roasted_Run = flipud(Roasted_Run);
+alpha_Roasted_Run = flipud(alpha_Roasted_Run);
+
+[Roasted_Runflip,~,alpha_Roasted_Runflip] = imread('Roasted_Run.png');
+Roasted_Runflip = rot90(Roasted_Runflip,2);
+alpha_Roasted_Runflip = rot90(alpha_Roasted_Runflip,2);
+
+[m_jump,~,alpha_jump] = imread('m_jump.png');
+m_jump = flipud(m_jump);
+alpha_jump = flipud(alpha_jump);
+
+[m_jumpflip,~,alpha_jumpflip] = imread('m_jump.png');
+m_jumpflip = rot90(m_jumpflip,2);
+alpha_jumpflip = rot90(alpha_jumpflip,2);
+
+[Roasted_Jump,~,alpha_Roasted_Jump] = imread('Roasted_Jump.png');
+Roasted_Jump = flipud(Roasted_Jump);
+alpha_Roasted_Jump = flipud(alpha_Roasted_Jump);
+
+[Roasted_Jumpflip,~,alpha_Roasted_Jumpflip] = imread('Roasted_Jump.png');
+Roasted_Jumpflip = rot90(Roasted_Jumpflip,2);
+alpha_Roasted_Jumpflip = rot90(alpha_Roasted_Jumpflip,2);
+
+[m_crouch,~,alpha_crouch] = imread('m_crouch.png');
+m_crouch = flipud(m_crouch);
+alpha_crouch = flipud(alpha_crouch);
+
+[m_crouchflip,~,alpha_crouchflip] = imread('m_crouch.png');
+m_crouchflip = rot90(m_crouchflip,2);
+alpha_crouchflip = rot90(alpha_crouchflip,2);
+
+[Roasted_Crouch,~,alpha_Roasted_Crouch] = imread('Roasted_Crouch.png');
+Roasted_Crouch = flipud(Roasted_Crouch);
+alpha_Roasted_Crouch = flipud(alpha_Roasted_Crouch);
+
+[Roasted_Crouchflip,~,alpha_Roasted_Crouchflip] = imread('Roasted_Crouch.png');
+Roasted_Crouchflip = rot90(Roasted_Crouchflip,2);
+alpha_Roasted_Crouchflip = rot90(alpha_Roasted_Crouchflip,2);
+
+[m_jab,~,alpha_jab] = imread('m_jab.png');
+m_jab = flipud(m_jab);
+alpha_jab = flipud(alpha_jab);
+
+[m_jabflip,~,alpha_jabflip] = imread('m_jab.png');
+m_jabflip = rot90(m_jabflip,2);
+alpha_jabflip = rot90(alpha_jabflip,2);
+
+[Roasted_Jab,~,alpha_Roasted_Jab] = imread('Roasted_Jab.png');
+Roasted_Jab = flipud(Roasted_Jab);
+alpha_Roasted_Jab = flipud(alpha_Roasted_Jab);
+
+[Roasted_Jabflip,~,alpha_Roasted_Jabflip] = imread('Roasted_Jab.png');
+Roasted_Jabflip = rot90(Roasted_Jabflip,2);
+alpha_Roasted_Jabflip = rot90(alpha_Roasted_Jabflip,2);
+
+[m_upward_jab,~,alpha_upward_jab] = imread('m_upward_jab.png');
+m_upward_jab = flipud(m_upward_jab);
+alpha_upward_jab = flipud(alpha_upward_jab);
+
+[m_upward_jabflip,~,alpha_upward_jabflip] = imread('m_upward_jab.png');
+m_upward_jabflip = rot90(m_upward_jabflip,2);
+alpha_upward_jabflip = rot90(alpha_upward_jabflip,2);
+
+[Roasted_Upwards_Jab,~,alpha_Roasted_Upwards_Jab] = imread('Roasted_Upwards_Jab.png');
+Roasted_Upwards_Jab = flipud(Roasted_Upwards_Jab);
+alpha_Roasted_Upwards_Jab = flipud(alpha_Roasted_Upwards_Jab);
+
+[Roasted_Upwards_Jabflip,~,alpha_Roasted_Upwards_Jabflip] = imread('Roasted_Upwards_Jab.png');
+Roasted_Upwards_Jabflip = rot90(Roasted_Upwards_Jabflip,2);
+alpha_Roasted_Upwards_Jabflip = rot90(alpha_Roasted_Upwards_Jabflip,2);
+
+[Unroasted_Dash,~,alpha_upward_Unroasted_Dash] = imread('Unroasted_Dash.png');
+Unroasted_Dash = flipud(Unroasted_Dash);
+alpha_upward_Unroasted_Dash = flipud(alpha_upward_Unroasted_Dash);
+
+[Unroasted_Dashflip,~,alpha_Unroasted_Dashflip] = imread('Unroasted_Dash.png');
+Unroasted_Dashflip = rot90(Unroasted_Dashflip,2);
+alpha_Unroasted_Dashflip = rot90(alpha_Unroasted_Dashflip,2);
+
+[Roasted_Dash,~,alpha_Roasted_Dash] = imread('Roasted_Dash.png');
+Roasted_Dash = flipud(Roasted_Dash);
+alpha_Roasted_Dash = flipud(alpha_Roasted_Dash);
+
+[Roasted_Dashflip,~,alpha_Roasted_Dashflip] = imread('Roasted_Dash.png');
+Roasted_Dashflip = rot90(Roasted_Dashflip,2);
+alpha_Roasted_Dashflip = rot90(alpha_Roasted_Dashflip,2);
+
+% win images 
+[p1_win,~,~] = imread('Player1_Wins.jpg');
+p1_win = flipud(p1_win);
+
+[p2_win,~,~] = imread('Player2_Wins.jpg');
+p2_win = flipud(p2_win);
+
+
+
+% Object scale (normalized)
+scale = 200/imgW;
+    
+    [P1_HB,~,alphaP1] = imread('P1_Health.png');
+    P1_HB = flipud(P1_HB);
+    alphaP1 = flipud(alphaP1);
+    
+    [P2_HB,~,alphaP2] = imread('P2_Health.png');
+    P2_HB = flipud(P2_HB);
+    alphaP2 = flipud(alphaP2);
+
+    [Black_HB,~,alphadhb] = imread('Black_HB.png');
+    alphadhb = flipud(alphadhb);
+    
+    hb_width  = 0.45;   
+    hb_height = 0.15;   
+    hb_left   = 0.028;   
+    hb_top    = 0.923;  
+  
+
+    dhb_width  = 0.23;   
+    dhb_height = 0.08745;   
+    dhb_left   = 0.182;   
+    dhb_top    = 0.8935;  
+
+    p2_left = bgWidth - hb_left - hb_width;
+
+    dhb_right = dhb_left + dhb_width;
+    p2_dhb_left = bgWidth - dhb_left - dhb_width;
+end
+
+
+function jab = jabfunction(x1, y1, x2, y2, up, hitbox)
+    
+    
+    
+
+    if x1 < x2 && (x1 + hitbox) > x2 && y1 < y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2      %if player 1 is to the left of player 2
+
+             hit = 1;
+             % 1 means he hit
+
+    elseif x1 > x2 && (x1 - hitbox) < x2 && y1 <y2+hitbox/2 && y1 > y2-hitbox+hitbox*up/2   %if player 1 is to the right of player 2
+
+             hit =  1;
+    else 
+
+             hit = 0;
+
+    end
+
+    jab = hit;
+
+end
+
+
+function image = changeimage(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
+
+    
+ if ux >= 0 
+       
+    if p1crouchbtn == 0 
+        image{1} = m_crouch;
+        image{2}= alpha_crouch*burnt;
+        image{3} = Roasted_Crouch;
+        image{4} = alpha_Roasted_Crouch;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+
+        if up == 0
+            image{1} = m_upward_jab;
+            image{2}= alpha_upward_jab*burnt;
+            image{3} = Roasted_Upwards_Jab;
+            image{4} = alpha_Roasted_Upwards_Jab;
+            
+        else
+            image{1} = m_jab;
+            image{2}= alpha_jab*burnt;
+            image{3} = Roasted_Jab;
+            image{4} = alpha_Roasted_Jab;
+        end
+    
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
+        image{1} = m_jump;
+        image{2}= alpha_jump*burnt;
+        image{3} = Roasted_Jump;
+        image{4} = alpha_Roasted_Jump;
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dash;
+        image{2}= alpha_upward_Unroasted_Dash*burnt;
+        image{3} = Roasted_Dash;
+        image{4} = alpha_Roasted_Dash;
+
+    else
+        image{1} = m_run;
+        image{2} = alpha_run*burnt;
+        image{3} = Roasted_Run;
+        image{4} = alpha_Roasted_Run;
+        
+    end
+    
+
+ else
+    if p1crouchbtn == 0 
+        image{1} = m_crouchflip;
+        image{2}= alpha_crouchflip*burnt;
+        image{3} = Roasted_Crouchflip;
+        image{4} = alpha_Roasted_Crouchflip;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+        if up == 0
+            image{1} = m_upward_jabflip;
+            image{2}= alpha_upward_jabflip*burnt;
+            image{3} = Roasted_Upwards_Jabflip;
+            image{4} = alpha_Roasted_Upwards_Jabflip;
+            
+        else
+            image{1} = m_jabflip;
+            image{2}= alpha_jabflip*burnt;   
+            image{3} = Roasted_Jabflip;
+            image{4} = alpha_Roasted_Jabflip;
+        end
+    
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
+        image{1} = m_jumpflip;
+        image{2}= alpha_jumpflip*burnt;
+        image{3} = Roasted_Jumpflip;
+        image{4} = alpha_Roasted_Jumpflip;
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dashflip;
+        image{2}= alpha_Unroasted_Dashflip*burnt;
+        image{3} = Roasted_Dashflip;
+        image{4} = alpha_Roasted_Dashflip;
+
+    else
+        image{1} = m_runflip;
+        image{2} = alpha_runflip*burnt;
+        image{3} = Roasted_Runflip;
+        image{4} = alpha_Roasted_Runflip;
+
+    end
+ end
+ 
+ 
+end
+
+function image = changeimageflip(ux, up, burnt, p1crouchbtn, p1jabbtn, p1jumpbtn, p1dashbtn, m_runflip,alpha_runflip,m_jumpflip,alpha_jumpflip, m_crouchflip,alpha_crouchflip,...
+          m_jabflip,alpha_jabflip, m_upward_jabflip,alpha_upward_jabflip, m_run, alpha_run, m_jump, alpha_jump, ...
+          m_crouch, alpha_crouch, m_jab, alpha_jab, ...
+          m_upward_jab, alpha_upward_jab,Roasted_Run,alpha_Roasted_Run, Roasted_Runflip,alpha_Roasted_Runflip, ...
+          Roasted_Jump, alpha_Roasted_Jump, Roasted_Jumpflip,alpha_Roasted_Jumpflip, Roasted_Crouch,alpha_Roasted_Crouch,...
+          Roasted_Crouchflip,alpha_Roasted_Crouchflip, Roasted_Jab,alpha_Roasted_Jab, Roasted_Jabflip,alpha_Roasted_Jabflip,...
+          Roasted_Upwards_Jab,alpha_Roasted_Upwards_Jab, Roasted_Upwards_Jabflip,alpha_Roasted_Upwards_Jabflip, ...
+          Unroasted_Dash,alpha_upward_Unroasted_Dash, Unroasted_Dashflip,alpha_upward_Unroasted_Dashflip, ...
+          Roasted_Dash,alpha_Roasted_Dash, Roasted_Dashflip,alpha_Roasted_Dashflip)
+
+    
+
+ if ux <= 0
+   
+    if p1crouchbtn == 0 
+        image{1} = m_crouchflip;
+        image{2}= alpha_crouchflip*burnt;
+        image{3} = Roasted_Crouchflip;
+        image{4} = alpha_Roasted_Crouchflip;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+        if up == 0
+            image{1} = m_upward_jabflip;
+            image{2}= alpha_upward_jabflip*burnt;
+            image{3} = Roasted_Upwards_Jabflip;
+            image{4} = alpha_Roasted_Upwards_Jabflip;
+            
+        else
+            image{1} = m_jabflip;
+            image{2}= alpha_jabflip*burnt;   
+            image{3} = Roasted_Jabflip;
+            image{4} = alpha_Roasted_Jabflip;
+        end
+    
+    elseif p1jumpbtn == 0 && p1crouchbtn == 1
+        image{1} = m_jumpflip;
+        image{2}= alpha_jumpflip*burnt;
+        image{3} = Roasted_Jumpflip;
+        image{4} = alpha_Roasted_Jumpflip;
+
+     elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dashflip;
+        image{2}= alpha_upward_Unroasted_Dashflip*burnt;
+        image{3} = Roasted_Dashflip;
+        image{4} = alpha_Roasted_Dashflip;
+    else
+        image{1} = m_runflip;
+        image{2} = alpha_runflip*burnt;
+        image{3} = Roasted_Runflip;
+        image{4} = alpha_Roasted_Runflip;
+
+    end
+ 
+ 
+ else 
+       
+    if p1crouchbtn == 0 
+        image{1} = m_crouch;
+        image{2}= alpha_crouch*burnt;
+        image{3} = Roasted_Crouch;
+        image{4} = alpha_Roasted_Crouch;
+        
+    elseif p1jabbtn == 0 && p1crouchbtn == 1
+
+        if up == 0
+            image{1} = m_upward_jab;
+            image{2}= alpha_upward_jab*burnt;
+            image{3} = Roasted_Upwards_Jab;
+            image{4} = alpha_Roasted_Upwards_Jab;
+            
+        else
+            image{1} = m_jab;
+            image{2}= alpha_jab*burnt;
+            image{3} = Roasted_Jab;
+            image{4} = alpha_Roasted_Jab;
+        end
+    
+    elseif p1jumpbtn == 0
+        image{1} = m_jump;
+        image{2}= alpha_jump*burnt;
+        image{3} = Roasted_Jump;
+        image{4} = alpha_Roasted_Jump;
+
+    elseif p1dashbtn == 0 && p1crouchbtn == 1
+        image{1} = Unroasted_Dash;
+        image{2}= alpha_upward_Unroasted_Dash*burnt;
+        image{3} = Roasted_Dash;
+        image{4} = alpha_Roasted_Dash;
+
+    else
+        image{1} = m_run;
+        image{2} = alpha_run*burnt;
+        image{3} = Roasted_Run;
+        image{4} = alpha_Roasted_Run;
+        
+    end
+    
+end
+end
+
+function showWinScreen(winner, p1_win, p2_win, backgroundsound, Jab_sound, Jab_sound2)
+
+    stop(backgroundsound);
+    stop(Jab_sound);
+    stop(Jab_sound2);
+
+    clf;
+    set(gcf,'WindowState','maximized','Color','k');
+    if winner == 1
+        img = p1_win;
+    else
+        img = p2_win;
+    end
+
+    % Get image size
+    [imgH,imgW,~] = size(img);
+    imgRatio = imgW/imgH;
+
+    axH = 1;
+    axW = imgRatio;
+    axX = (1 - axW) / 2;
+    axY = 0;
+
+    ax = axes('Position',[axX axY axW axH]);
+    hold on
+    axis off
+   image('CData', img, 'XData',[0 axW], 'YData',[0 axH]);
+
+    axis image
+    set(gca, 'YDir', 'normal');
+    xlim([0 axW])
+    ylim([0 axH])
+        drawnow;
+ 
+    waitfor(gcf);
+end
+
+function [name1, name2] = startScreen()
+
+    fig = figure('WindowState','maximized', 'Toolbar','none', 'MenuBar','none', 'Color','k');
+
+    bg = imread('Start_Screen.jpg');
+    bg = flipud(bg);
+    [imgH, imgW, ~] = size(bg);
+    imgRatio = imgW / imgH;
+
+    axH = 1;
+    axW = imgRatio;
+    axX = (1 - axW) / 2;
+    axY = 0;
+
+    ax = axes('Position',[axX axY axW axH]);
+    hold on
+    axis off
+    image('CData', bg, 'XData',[0 imgRatio], 'YData',[0 1]);
+    axis image
+    set(gca, 'YDir', 'normal');
+    xlim([0 imgRatio])
+    ylim([0 1])
+
+    % Player 1 box
+    p1box = uicontrol('Style','edit', ...
+        'Units','normalized', ...
+        'Position',[0.0372 0.622 0.235 0.093], ...
+        'String','Player 1', ...
+        'FontSize',25, ...
+        'FontName','Cooper Black', ...
+        'BackgroundColor',[79/255 53/255 35/255], ...
+        'ForegroundColor',[228/255 210/255 173/255]);
+
+    % Player 2 box
+    p2box = uicontrol('Style','edit', ...
+        'Units','normalized', ...
+        'Position',[0.7378 0.622 0.235 0.093], ...
+        'String','Player 2', ...
+        'FontSize',25, ...
+        'FontName','Cooper Black', ...
+        'BackgroundColor',[79/255 53/255 35/255], ...
+        'ForegroundColor',[228/255 210/255 173/255]);
+
+    btn_width  = 0.365;          % width of button
+    btn_height = 0.2;          % height of button
+    btn_cx     = imgRatio*0.505; % horizontal center
+    btn_cy     = 0.55;          % vertical center
+
+    [start_btn, ~, start_alpha] = imread('Start_Button.png');
+    start_btn   = flipud(start_btn);
+    start_alpha = flipud(start_alpha);
+
+    start_img = image(ax, 'CData', start_btn, ...
+        'XData',[btn_cx - btn_width/2,  btn_cx + btn_width/2], ...
+        'YData',[btn_cy - btn_height/2, btn_cy + btn_height/2], ...
+        'AlphaData', start_alpha * 0);
+
+    set(start_img, 'ButtonDownFcn', @(~,~) uiresume(fig));
+
+    uiwait(fig);
+
+    name1 = get(p1box, 'String');
+    name2 = get(p2box, 'String');
+
+    close(fig);
+
+end

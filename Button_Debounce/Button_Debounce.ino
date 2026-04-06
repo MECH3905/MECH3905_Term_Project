@@ -78,7 +78,7 @@ void loop() {
       jumpBtn = 1; // Register release
       l = 0;       // Reset hold limiter
     }
-  }
+ }
 
   i++; // Increment jump delay counter
 
