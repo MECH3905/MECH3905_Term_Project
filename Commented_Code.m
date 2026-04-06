@@ -117,18 +117,18 @@ u2x = 0;  % Initialize Player 2 horizontal force input to zero
 
 
 % GAME SOUNDS
-[y0, leep] = audioread('Guile_theme.mp3'); % Load background music 
+[y0, leep] = audioread('Sound_Gameplay.mp3'); % Load background music 
 y0 = 0.2*y0;                               % Scale volume down to 20% 
 backgroundsound = audioplayer(y0, leep);   % Create audio player object for background music
 play(backgroundsound);                     % Start playing background music 
 
 % Jab impact sound for Player 2 hitting Player 1 
-[y, Fs] = audioread('jab_oof.mp4'); % Read audio file for hit sound effect
+[y, Fs] = audioread('Sound_Jab.mp4'); % Read audio file for hit sound effect
 Fs = 1.75*Fs;                       % Increase by 1.75x to raise pitch
 Jab_sound = audioplayer(y, Fs);     % Create audio player for Player 2's jab sound
 
 % Jab impact sound for Player 1 hitting Player 2 
-[y, Fs] = audioread('jab_oof.mp4'); % Read audio file again for second player
+[y, Fs] = audioread('Sound_Jab.mp4'); % Read audio file again for second player
 Fs = 1.5*Fs;                        % Increase by 1.5x to raise pitch
 Jab_sound2 = audioplayer(y, Fs);    % Ceate audio player for Player 1's jab sound
 
