@@ -6,6 +6,16 @@
 % Quinn Fox (B01020683)
 % Purpose: Two player fighter game using arduino uno joystick and button inputs
 
+% SOUND_GAMEPLAY REFERENCE
+% Author: Super Street Fighter II OST Guile
+% Website URL: https://www.youtube.com/watch?v=FEdbR0jnfvQ
+% Date: March 30, 2026
+
+% SOUND_JAB REFERENCE
+% Author: Minecraft 
+% Website URL: https://www.bing.com/videos/riverview/relatedvideo?q=minecraft+off+sound&&mid=3775B586140AEB1D4C9A3775B586140AEB1D4C9A&FORM=VAMGZC
+% Date: March 30, 2026 
+
 % IMAGE REFERENCE
 % Author: Google Gemini Nano Bannana 2
 % Website URL: https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-CA&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*xe3rwt*_gcl_au*ODk5Njc3MzQuMTc3Mjc1OTQxMg..*_ga*NDc0OTA2Mjk2LjE3NzI3NTk0MTA.*_ga_WC57KJ50ZZ*czE3NzU0ODI3NDAkbzI1JGcwJHQxNzc1NDgyNzQwJGo2MCRsMCRoMA..
