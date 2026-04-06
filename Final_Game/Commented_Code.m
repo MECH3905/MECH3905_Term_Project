@@ -6,8 +6,25 @@
 % Quinn Fox (B01020683)
 % Purpose: Two player fighter game using arduino uno joystick and button inputs
 
+% SOUND_GAMEPLAY REFERENCE
+% Author: Super Street Fighter II OST Guile
+% Website URL: https://www.youtube.com/watch?v=FEdbR0jnfvQ
+% Date: March 30, 2026
+
+% SOUND_JAB REFERENCE
+% Author: Minecraft 
+% Website URL: https://www.bing.com/videos/riverview/relatedvideo?q=minecraft+off+sound&&mid=3775B586140AEB1D4C9A3775B586140AEB1D4C9A&FORM=VAMGZC
+% Date: March 30, 2026 
+
 % IMAGE REFERENCE
-% All images created through Google Gemini Nano Bannana 2
+% Author: Google Gemini Nano Bannana 2
+% Website URL: https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-CA&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*xe3rwt*_gcl_au*ODk5Njc3MzQuMTc3Mjc1OTQxMg..*_ga*NDc0OTA2Mjk2LjE3NzI3NTk0MTA.*_ga_WC57KJ50ZZ*czE3NzU0ODI3NDAkbzI1JGcwJHQxNzc1NDgyNzQwJGo2MCRsMCRoMA..
+% Dates: March 4, 2026 - April 2, 2026
+
+% CODE REFERENCE
+% Author: Mae Seto, BrightSpace lecture content 
+% Website URL: https://dal.brightspace.com/d2l/le/content/414169/Home
+% Dates: January 7, 2026 - April 6, 2026
 
 clear all % Clear all variables from workspace
 close all % Close all open figures
@@ -110,18 +127,18 @@ u2x = 0;  % Initialize Player 2 horizontal force input to zero
 
 
 % GAME SOUNDS
-[y0, leep] = audioread('Guile_theme.mp3'); % Load background music 
+[y0, leep] = audioread('Sound_Gameplay.mp3'); % Load background music 
 y0 = 0.2*y0;                               % Scale volume down to 20% 
 backgroundsound = audioplayer(y0, leep);   % Create audio player object for background music
 play(backgroundsound);                     % Start playing background music 
 
 % Jab impact sound for Player 2 hitting Player 1 
-[y, Fs] = audioread('jab_oof.mp4'); % Read audio file for hit sound effect
+[y, Fs] = audioread('Sound_Jab.mp4'); % Read audio file for hit sound effect
 Fs = 1.75*Fs;                       % Increase by 1.75x to raise pitch
 Jab_sound = audioplayer(y, Fs);     % Create audio player for Player 2's jab sound
 
 % Jab impact sound for Player 1 hitting Player 2 
-[y, Fs] = audioread('jab_oof.mp4'); % Read audio file again for second player
+[y, Fs] = audioread('Sound_Jab.mp4'); % Read audio file again for second player
 Fs = 1.5*Fs;                        % Increase by 1.5x to raise pitch
 Jab_sound2 = audioplayer(y, Fs);    % Ceate audio player for Player 1's jab sound
 
@@ -526,7 +543,7 @@ function dxdt = f(y, h, uy, m, rho, Cd, A, g)
  
     dxdt(1) = v;                       % Verticle velocity
     dxdt(2) = (uy - F_drag - g*m) / m; % Verticle acceleration 
-end,
+end
  
 % Horizontal dynamics: Drag 
 function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
@@ -540,6 +557,7 @@ function dxdtx = fx(x, h, ux, m, rho, Cd, A, g)
 
     dxdtx(1) = vx;                 % Horizontal velocity
     dxdtx(2) = (ux - F_dragx) / m; % Horizontal acceleration 
+end
 
 % FIGURE SETUP FUNCTION
 % Creates the game window, loads all sprite images, sets up the background, 
